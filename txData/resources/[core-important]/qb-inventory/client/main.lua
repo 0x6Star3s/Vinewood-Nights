@@ -158,6 +158,7 @@ local function closeInventory()
 end
 
 local function ToggleHotbar(toggle)
+    isHotbar = toggle
     local HotbarItems = {
         [1] = PlayerData.items[1],
         [2] = PlayerData.items[2],
@@ -828,14 +829,15 @@ end, false)
 
 RegisterKeyMapping('inventory', 'Open Inventory', 'keyboard', 'TAB')
 
-RegisterCommand('hotbar', function()
-    isHotbar = not isHotbar
+RegisterCommand('+hotbar', function()
     if not PlayerData.metadata["isdead"] and not PlayerData.metadata["inlaststand"] and not PlayerData.metadata["ishandcuffed"] and not IsPauseMenuActive() then
-        ToggleHotbar(isHotbar)
+        ToggleHotbar(not isHotbar)
     end
 end)
 
-RegisterKeyMapping('hotbar', 'Toggles keybind slots', 'keyboard', 'z')
+RegisterCommand('-hotbar', function() end) -- puszczenie klawisza ma nic nie robic
+
+RegisterKeyMapping('+hotbar', 'Toggles keybind slots', 'keyboard', 'z')
 
 for i = 1, 6 do
     RegisterCommand('slot' .. i,function()
