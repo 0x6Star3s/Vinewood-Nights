@@ -1,0 +1,23 @@
+services:
+  projectterrific-db:
+    image: mariadb:10.6
+    container_name: local4word6-projectterrific-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: projectterrific_root
+      MARIADB_DATABASE: projectterrific
+      MARIADB_USER: fivem
+      MARIADB_PASSWORD: fivem_local
+    ports:
+      - "3307:3306"
+    volumes:
+      - projectterrific-db-data:/var/lib/mysql
+      - ./docker/mariadb/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  projectterrific-db-data:

@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CVehicleModelInfoVarGlobal>    
+  <Wheels>
+    <Item> <!-- VWT_SPORT -->
+      <Item>
+        <wheelName>wheel_agsl73</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL73</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl73c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL73</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl73m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL73</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsaero35</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AERO.35</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsaero35c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AERO.35</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsaero35m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AERO.35</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl12</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL12</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl12c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL12</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl12m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL12</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl14</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL14</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl14m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL14</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl14c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL14</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl24</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL24</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl24m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL24</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl24c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL24</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl27</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL27</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl27m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL27</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl27c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL27</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl33</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL33</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl33m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL33</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl33c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL33</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl34</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL34</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl34m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL34</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl34c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL34</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl37</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL37</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl37c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL37</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl37m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL37</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl40</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL40</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl40c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL40</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl40m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL40</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl41</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL41</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl41c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL41</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl41m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL41</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl42</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL42</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl42c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL42</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl42m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL42</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl46</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL46</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl46m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL46</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl46c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL46</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl47</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL47</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl47m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL47</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl47c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL47</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl49</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL49</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl49m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL49</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl49c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL49</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl52</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL52</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl52m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL52</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl52c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL52</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl53</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL53</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl53m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL53</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl53c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL53</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl55</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL55</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl55m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL55</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl55c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL55</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl58</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL58</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl58m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL58</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl58c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL58</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl59</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL59</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl59m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL59</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl59c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL59</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl66</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL66</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl66m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL66</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl66c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL66</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl68</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL68</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl68m</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL68</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+      <Item>
+        <wheelName>wheel_agsl68c</wheelName>
+        <wheelVariation />
+        <modShopLabel>AVANT GARDE AGL68</modShopLabel>
+        <rimRadius value="0.26"/>
+        <rear value="false"/>
+      </Item>
+	</Item>  
+    <Item/> <!-- VWT_MUSCLE -->
+    <Item/> <!-- VWT_BIKE -->
+    <Item/> <!-- VWT_HIEND -->		
+    <Item/> <!-- VWT_SUPERMOD1 -->
+    <Item/> <!-- VWT_SUPERMOD2 -->
+  </Wheels>
+</CVehicleModelInfoVarGlobal>

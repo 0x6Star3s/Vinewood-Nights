@@ -1,0 +1,286 @@
+/* Nice font for button from Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;500&display=swap");
+
+* {
+    padding: 0;
+    margin: 0;
+    font-family: sans-serif;
+    font-weight: bold;
+}
+
+#container {
+    position: absolute;
+    height: auto;
+    top: 20%;
+    right: 20%;
+    border-radius: 5px;
+    background: transparent !important;
+}
+
+#container.position-right {
+    right: 2vw;
+    left: auto;
+    width: auto;
+    max-width: calc(100vw - 4vw);
+    box-sizing: border-box;
+}
+
+#container.position-right #buttons {
+    width: 13.2vw;
+    min-width: 264px;
+    max-width: calc(100vw - 5vw);
+    margin-left: auto;
+    margin-right: 0;
+    padding: 10px 14px 10px 10px;
+    box-sizing: border-box;
+    overflow-x: visible;
+    overflow-y: auto;
+}
+
+#container.position-right .button,
+#container.position-right .title {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: unset;
+    margin-left: auto;
+    margin-right: 0;
+    overflow: visible;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+#container.position-right div > .text,
+#container.position-right div > .header {
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    overflow: visible;
+    line-height: 1.35;
+}
+
+#container.position-right .button > div:not(.icon) {
+    flex: 1;
+    min-width: 0;
+}
+
+.button {
+    cursor: pointer;
+    display: flex;
+    flex-direction: row !important;
+    gap: 10px;
+}
+
+#buttons {
+    max-height: 75vh;
+    width: 31vw;
+    overflow-x: none;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+
+.title {
+    cursor: default;
+    gap: 10px;
+    display: flex;
+    flex-direction: row !important;
+}
+
+html,
+body {
+    background: transparent !important;
+}
+
+#buttons::-webkit-scrollbar {
+    display: none;
+}
+
+body::-webkit-scrollbar {
+    display: none;
+}
+
+.button {
+    width: auto;
+    max-width: 35%;
+    height: 10%;
+    background: #222831;
+    color: white;
+    font-size: 15px;
+    line-height: 1.5;
+    margin: auto;
+    position: relative;
+    top: 10%;
+    margin-top: 0.5rem;
+    overflow: hidden;
+    padding: 0.50rem;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0rem 0rem 0.1rem 0.05rem #000000;
+    cursor: pointer;
+}
+
+.icon {
+    color: #fff;
+    display: flex;
+    align-items: center;
+    position: relative;
+    justify-content: left;
+}
+
+.button:hover {
+    background-color: #30475e;
+}
+
+.button.danger {
+    background: #7f1d1d;
+    border: 1px solid #ef4444;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.35);
+}
+
+.button.danger:hover {
+    background-color: #991b1b;
+}
+
+.button.danger div > .text {
+    color: #fecaca;
+}
+
+.button.success {
+    background: #1b5e20;
+    border: 1px solid #4caf50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.35);
+}
+
+.button.success:hover {
+    background-color: #2e7d32;
+}
+
+.button.success div > .text {
+    color: #c8e6c9;
+}
+
+.button.admin {
+    background: #37474f;
+    border: 1px solid #b0bec5;
+    box-shadow: 0 0 8px rgba(176, 190, 197, 0.35);
+}
+
+.button.admin:hover {
+    background-color: #455a64;
+}
+
+.button.admin div > .text {
+    color: #cfd8dc;
+}
+
+.title {
+    width: auto;
+    max-width: 35%;
+    height: 10%;
+    background: #222831;
+    color: white;
+    margin: auto;
+    position: relative;
+    top: 10%;
+    margin-top: 0.5rem;
+    font-size: 16px;
+    overflow: hidden;
+    padding: 0.50rem;
+    border-radius: 0.15rem;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0rem 0rem 0.1rem 0.05rem #000000;
+}
+
+.title > div.header {
+    text-decoration: underline !important;
+}
+
+.disabled {
+    background: rgba(102, 102, 102, 0.9) !important;
+    cursor: default;
+}
+
+div > .text {
+    color: rgb(232, 229, 229);
+    flex-direction: column;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.8rem;
+    overflow: hidden;
+    font-weight: 300;
+}
+
+div > .header {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    position: relative;
+    justify-content: left;
+    overflow: wrap;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.9rem;
+    overflow: hidden;
+    font-weight: 500;
+}
+
+/* ---- odświeżony wygląd + nawigacja strzałkami ---- */
+.button,
+.title {
+    background: rgba(24, 28, 36, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-left: 3px solid transparent;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    padding: 0.6rem 0.7rem;
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
+}
+
+.button:hover,
+.button.active {
+    background: rgba(48, 71, 94, 0.95);
+    border-left-color: #4fc3f7;
+    transform: translateX(-3px);
+}
+
+.button.danger.active { border-left-color: #ef4444; }
+.button.success.active { border-left-color: #4caf50; }
+.button.admin.active { border-left-color: #b0bec5; }
+
+.title {
+    border-left-color: #4fc3f7;
+    background: rgba(15, 18, 24, 0.95);
+}
+
+div > .header { line-height: 1.3; }
+div > .text { opacity: 0.85; }
+
+#hint {
+    margin: 6px 10px 0 10px;
+    padding: 5px 8px;
+    font-size: 0.7rem;
+    font-weight: 400;
+    font-family: Arial, Helvetica, sans-serif;
+    color: rgba(255, 255, 255, 0.65);
+    background: rgba(15, 18, 24, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 6px;
+    text-align: center;
+}
+
+#hint span {
+    color: #4fc3f7;
+    font-weight: 600;
+}
+
+#container:not(.position-right) #hint {
+    width: auto;
+    max-width: 35%;
+    margin: 6px auto 0 auto;
+}
+
+.button.active {
+    box-shadow: inset 0 0 0 1px #4fc3f7, 0 4px 16px rgba(0, 0, 0, 0.5);
+}

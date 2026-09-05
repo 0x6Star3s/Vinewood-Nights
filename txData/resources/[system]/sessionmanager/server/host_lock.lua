@@ -1,0 +1,1 @@
+-- Placeholder server script for sessionmanager.

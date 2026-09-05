@@ -1,0 +1,36 @@
+# ---- Sekrety: NIGDY nie commitować ----
+txData/secrets.cfg
+txData/admins.json
+txData/server.cfg.bkp
+*.env
+.env
+
+# ---- Runtime FXServer (odtwarzalne) ----
+txData/cache/
+txData/.replxx_history
+txData/db/
+artifact/
+*.log
+
+# ---- Kopie zapasowe i raporty robocze ----
+backups/
+*.bak
+*.bak-*
+handling_report.json
+ytd_report.json
+
+# ---- Zasoby gry: za duże dla GitHuba (limit 100 MB/plik) ----
+*.yft
+*.ydr
+*.ytd
+*.ydd
+*.dds
+*.rpf
+*.awc
+*.psd
+*.oiv
+
+# ---- System ----
+Thumbs.db
+desktop.ini
+.DS_Store

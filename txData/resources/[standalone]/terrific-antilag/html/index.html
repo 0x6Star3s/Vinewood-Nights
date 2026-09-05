@@ -1,0 +1,16 @@
+<html>
+<head>
+<script>
+// Kazdy strzal to osobny obiekt Audio - inaczej szybka seria ucinalaby sama siebie.
+window.addEventListener('message', function (event) {
+    var data = event.data;
+    if (data.type !== 'pop') return;
+
+    var audio = new Audio('sounds/' + data.file + '.ogg');
+    audio.volume = Math.max(0, Math.min(1, data.volume));
+    audio.play().catch(function () {});
+});
+</script>
+</head>
+<body></body>
+</html>

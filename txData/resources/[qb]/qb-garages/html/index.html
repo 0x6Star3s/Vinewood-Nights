@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Panel Garaży</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="overlay" class="hidden">
+    <div id="toasts"></div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <div class="panel-title">
+                <span class="dot"></span>
+                Panel Administracyjny Garaży
+            </div>
+            <button id="btnClose" class="icon-btn" title="Zamknij (ESC)">✕</button>
+        </div>
+
+        <div class="panel-body">
+            <aside class="sidebar">
+                <input id="search" type="text" placeholder="Szukaj garażu..." autocomplete="off">
+                <div id="garageList" class="garage-list"></div>
+                <button id="btnAdd" class="btn btn-accent btn-block">+ Nowy garaż</button>
+            </aside>
+
+            <section class="editor" id="editor">
+                <div class="empty-state" id="emptyState">
+                    <p>Wybierz garaż z listy po lewej<br>albo utwórz nowy.</p>
+                </div>
+
+                <form id="garageForm" class="hidden">
+                    <div class="editor-scroll">
+                        <div class="card">
+                            <div class="card-title">Podstawowe</div>
+                            <div class="field-row">
+                                <label>Klucz</label>
+                                <input id="fKey" type="text" disabled>
+                            </div>
+                            <div class="field-row">
+                                <label>Nazwa</label>
+                                <input id="fLabel" type="text" placeholder="np. Motel Parking">
+                            </div>
+                            <div class="field-row two-col">
+                                <div>
+                                    <label>Typ garażu</label>
+                                    <select id="fType">
+                                        <option value="public">public</option>
+                                        <option value="job">job</option>
+                                        <option value="gang">gang</option>
+                                        <option value="depot">depot</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label>Typ pojazdu</label>
+                                    <select id="fVehicle">
+                                        <option value="car">car</option>
+                                        <option value="air">air</option>
+                                        <option value="sea">sea</option>
+                                        <option value="rig">rig</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="field-row two-col" id="jobFields">
+                                <div>
+                                    <label>Job name</label>
+                                    <input id="fJob" type="text" placeholder="police">
+                                </div>
+                                <div>
+                                    <label>Job type</label>
+                                    <input id="fJobType" type="text" placeholder="leo">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-title">Blip (mapa)</div>
+                            <div class="field-row toggle-row">
+                                <label class="switch">
+                                    <input id="fShowBlip" type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                                <span>Pokaż blip na mapie</span>
+                            </div>
+                            <div class="field-row two-col">
+                                <div>
+                                    <label>Nazwa blipa</label>
+                                    <input id="fBlipName" type="text" placeholder="Public Parking">
+                                </div>
+                                <div>
+                                    <label>Numer sprite'a</label>
+                                    <input id="fBlipNumber" type="number" value="357">
+                                </div>
+                            </div>
+                            <div class="field-row">
+                                <label>Kolor blipa</label>
+                                <input id="fBlipColor" type="number" value="3">
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-title">Pozycje w świecie</div>
+
+                            <div class="pos-group" data-field="takeVehicle">
+                                <div class="pos-header">
+                                    <span class="pos-name">📍 Miejsce interakcji (mapa)</span>
+                                    <div class="pos-actions">
+                                        <button type="button" class="btn btn-sm" data-action="here">Ustaw z mojej pozycji</button>
+                                        <button type="button" class="btn btn-sm btn-ghost" data-action="goto">Teleportuj</button>
+                                    </div>
+                                </div>
+                                <div class="coord-inputs">
+                                    <input type="number" step="0.01" data-axis="x" placeholder="X">
+                                    <input type="number" step="0.01" data-axis="y" placeholder="Y">
+                                    <input type="number" step="0.01" data-axis="z" placeholder="Z">
+                                </div>
+                            </div>
+
+                            <div class="pos-group" data-field="spawnPoint">
+                                <div class="pos-header">
+                                    <span class="pos-name">🚗 Miejsce spawnu pojazdu</span>
+                                    <div class="pos-actions">
+                                        <button type="button" class="btn btn-sm" data-action="here">Ustaw z mojej pozycji</button>
+                                        <button type="button" class="btn btn-sm btn-ghost" data-action="goto">Teleportuj</button>
+                                    </div>
+                                </div>
+                                <div class="coord-inputs coord-inputs-4">
+                                    <input type="number" step="0.01" data-axis="x" placeholder="X">
+                                    <input type="number" step="0.01" data-axis="y" placeholder="Y">
+                                    <input type="number" step="0.01" data-axis="z" placeholder="Z">
+                                    <input type="number" step="0.01" data-axis="w" placeholder="Heading">
+                                </div>
+                            </div>
+
+                            <div class="pos-group" data-field="putVehicle">
+                                <div class="pos-header">
+                                    <span class="pos-name">🅿️ Miejsce odstawienia auta</span>
+                                    <div class="pos-actions">
+                                        <button type="button" class="btn btn-sm" data-action="here">Ustaw z mojej pozycji</button>
+                                        <button type="button" class="btn btn-sm btn-ghost" data-action="goto">Teleportuj</button>
+                                        <button type="button" class="btn btn-sm btn-ghost" data-action="clear">Wyczyść</button>
+                                    </div>
+                                </div>
+                                <div class="coord-inputs">
+                                    <input type="number" step="0.01" data-axis="x" placeholder="X">
+                                    <input type="number" step="0.01" data-axis="y" placeholder="Y">
+                                    <input type="number" step="0.01" data-axis="z" placeholder="Z">
+                                </div>
+                            </div>
+
+                            <div class="pos-group" data-field="previewPoint">
+                                <div class="pos-header">
+                                    <span class="pos-name">🎥 Miejsce podglądu 3D pojazdu</span>
+                                    <div class="pos-actions">
+                                        <button type="button" class="btn btn-sm" data-action="here">Ustaw z mojej pozycji</button>
+                                        <button type="button" class="btn btn-sm btn-ghost" data-action="goto">Teleportuj</button>
+                                        <button type="button" class="btn btn-sm btn-ghost" data-action="clear">Wyczyść (użyj spawnu)</button>
+                                    </div>
+                                </div>
+                                <div class="coord-inputs coord-inputs-4">
+                                    <input type="number" step="0.01" data-axis="x" placeholder="X">
+                                    <input type="number" step="0.01" data-axis="y" placeholder="Y">
+                                    <input type="number" step="0.01" data-axis="z" placeholder="Z">
+                                    <input type="number" step="0.01" data-axis="w" placeholder="Heading">
+                                </div>
+                                <div class="hint">Jeśli puste, podgląd 3D użyje miejsca spawnu pojazdu.</div>
+                            </div>
+
+                            <div class="pos-group" data-field="previewCamPoint">
+                                <div class="pos-header">
+                                    <span class="pos-name">📷 Kamera podglądu (kąt patrzenia)</span>
+                                    <div class="pos-actions">
+                                        <button type="button" class="btn btn-sm" data-action="here">Ustaw z mojej pozycji</button>
+                                        <button type="button" class="btn btn-sm btn-ghost" data-action="goto">Teleportuj</button>
+                                        <button type="button" class="btn btn-sm btn-ghost" data-action="clear">Wyczyść (auto-kąt)</button>
+                                    </div>
+                                </div>
+                                <div class="coord-inputs">
+                                    <input type="number" step="0.01" data-axis="x" placeholder="X">
+                                    <input type="number" step="0.01" data-axis="y" placeholder="Y">
+                                    <input type="number" step="0.01" data-axis="z" placeholder="Z">
+                                </div>
+                                <div class="hint">Można też ustawić w grze podczas podglądu pojazdu: F6 (wolna kamera) + F7 (zapisz kąt).</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-bar">
+                        <button type="button" id="btnDelete" class="btn btn-danger">Usuń garaż</button>
+                        <div class="spacer"></div>
+                        <button type="button" id="btnSave" class="btn btn-success">Zapisz garaż</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

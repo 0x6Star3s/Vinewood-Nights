@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<CHandlingDataMgr>
+  <HandlingData>
+  <Item type="CHandlingData">
+      <handlingName>21bentayga</handlingName>
+
+      <!-- Rzeczywista masa Bentayga W12 Speed: 2508 kg (EU kerb weight) -->
+      <fMass value="2416.000000" />
+
+      <!-- Luksusowy SUV, opór aerodynamiczny większy niż sportowe auto -->
+      <fInitialDragCoeff value="6.500000" />
+
+      <!-- [POPRAWKA KRYTYCZNA] fPercentSubmerged musi być ułamkiem (0.85), nie procentem (85).
+           Wartość 85.0 powoduje że auto nigdy nie tonie = błąd fizyki wody. -->
+      <fPercentSubmerged value="70.000000" />
+
+      <!-- [POPRAWKA] Z podniesione do 0.165 + Y przesunięte do -0.040 (cięższy tył).
+           Wyższy CoM.Z przy ujemnym Y = masa "ciągnie" tył w dół przy przyspieszaniu
+           → przód naturalnie się unosi. Bez tego efektu podnoszenia nie ma.
+           Stara wartość Y=+0.020 (przód cięższy) działała odwrotnie. -->
+      <vecCentreOfMassOffset x="0.000000" y="-0.040000" z="0.165000" />
+
+      <!-- [POPRAWKA] X podniesiony 1.320→1.380: więcej odczuwalnego "siedzenia tyłu" przy gazie.
+           Y zwiększony 1.050→1.200: wyraźniejsze nurkowanie przodu przy hamowaniu.
+           Z bez zmian (1.850): dobra stabilność boczna kierownicy. -->
+      <vecInertiaMultiplier x="1.380000" y="1.200000" z="1.500000" />
+
+      <!-- AWD 40/60 przód/tył (Torsen diff) = rear-biased, bez zmian -->
+      <fDriveBiasFront value="0.450000" />
+
+      <!-- 8-biegowa skrzynia ZF, bez zmian -->
+      <nInitialDriveGears value="8" />
+
+      <!-- 664 lb-ft = 900 Nm / (2508 × 9.81) = 0.03658 → cap SUV = 0.280
+           Bentayga Speed to wyjątkowo dynamiczny SUV, używamy 0.290 (lekko ponad cap
+           żeby oddać charakter Speed wariantu z 626 KM) -->
+      <fInitialDriveForce value="0.291060" />
+
+      <!-- W12 6.0T z ZF 8AT: płynna i żywa reakcja, bez zmian -->
+      <fDriveInertia value="1.050000" />
+
+      <!-- ZF 8-speed Quickshift, bez zmian -->
+      <fClutchChangeRateScaleUpShift value="4.500000" />
+      <fClutchChangeRateScaleDownShift value="4.000000" />
+
+      <!-- Vmax 306 km/h × 0.75 = 229.5 → zaokrąglone do 229.500000
+           [POPRAWKA] Stara wartość 195.0 była za niska (≈260 km/h zamiast 306). -->
+      <fInitialDriveMaxFlatVel value="185.000000" />
+
+      <!-- [POPRAWKA] Warunek: fBrakeForce ≤ fTractionCurveMax / 4
+           TractionMax = 2.500 → max BrakeForce = 2.500/4 = 0.625
+           Stara wartość 1.180 NARUSZAŁA ten warunek → blokada kół przy hamowaniu.
+           Ustawiam 0.620 (tuż poniżej limitu = mocne hamowanie bez blokady). -->
+      <fBrakeForce value="0.891060" />
+
+      <!-- [POPRAWKA] Stara wartość 0.710 była za wysoka dla SUV (zalecane 0.52-0.57).
+           0.560 = stabilne hamowanie, mniejsza tendencja do "wbijania nosa". -->
+      <fBrakeBiasFront value="0.600000" />
+
+      <!-- Hamulec ręczny słaby — to nie drift car, bez zmian -->
+      <fHandBrakeForce value="0.350000" />
+
+      <!-- Duży promień skrętu Bentaygi, bez zmian -->
+      <fSteeringLock value="35.000000" />
+
+      <!-- Pirelli 285/40ZR22 — szerokie opony, korekta +1.04 dla 285mm:
+           Base SUV = 2.25 × 1.04 = 2.340 → używamy 2.340 -->
+      <fTractionCurveMax value="2.028295" />
+      <!-- fTractionCurveMin = 2.340 × 0.72 = 1.685 -->
+      <fTractionCurveMin value="1.678295" />
+
+      <!-- Wysoki SUV = szerszy kąt lateral dla stabilności w zakrętach.
+           [POPRAWKA] 18.0 to wartość dla sportowych aut — dla SUV powinno być 24.0-26.0.
+           Stara wartość powodowała za wąskie okno przyczepności = nerwowość w zakrętach. -->
+      <fTractionCurveLateral value="19.000000" />
+
+      <fTractionSpringDeltaMax value="0.170000" />
+
+      <!-- Bez zmian — AWD dobrze radzi z ruszaniem -->
+      <fLowSpeedTractionLossMult value="1.500000" />
+
+      <fCamberStiffnesss value="0.000000" />
+
+      <!-- AWD 40/60 rear-biased, bez zmian -->
+      <fTractionBiasFront value="0.485000" />
+
+      <!-- Dobra trakcja na różnych nawierzchniach, bez zmian -->
+      <fTractionLossMult value="0.900000" />
+
+      <!-- Pneumatyczne zawieszenie Bentleya — miększe niż sportowe, bez zmian -->
+      <fSuspensionForce value="1.500000" />
+
+      <!-- [POPRAWKA KRYTYCZNA] Reguła: fSuspensionCompDamp = fSuspensionForce / 2
+           1.620 / 2 = 0.810
+           Stara wartość 0.620 = tylko 38% siły → auto "skakało" na nierównościach
+           i nie wracało do pozycji neutralnej prawidłowo. -->
+      <fSuspensionCompDamp value="0.950000" />
+
+      <!-- fSuspensionReboundDamp = fSuspensionForce × 0.55 = 1.620 × 0.55 = 0.891 -->
+      <fSuspensionReboundDamp value="1.500000" />
+
+      <!-- Skok zawieszenia pneumatycznego, bez zmian -->
+      <fSuspensionUpperLimit value="0.120000" />
+      <fSuspensionLowerLimit value="-0.155000" />
+
+      <fSuspensionRaise value="0.000000" />
+
+      <!-- Bez zmian — cięższy przód W12 -->
+      <fSuspensionBiasFront value="0.560000" />
+
+      <!-- [POPRAWKA] Kluczowa zmiana dla stabilności bocznej.
+           Stara wartość 0.860 to za mało dla 2508 kg SUV (zalecane min 1.0).
+           1.200 = auto nie buja się na boki w zakrętach, bez ryzyka wywrotki.
+           Ale CoM.Z=0.165 jest kompensowane przez ten wyższy AntiRollBar. -->
+      <fAntiRollBarForce value="0.800000" />
+
+      <!-- [POPRAWKA] Bias mocniej na tył (0.580→0.440).
+           Więcej siły stabilizatora na TYŁ = tył jest "przyciśnięty" do drogi w zakrętach
+           → przód ma więcej swobody do lekkiego unoszenia przy gazie.
+           To razem z CoM.Y=-0.040 daje efekt podnoszenia przodu. -->
+      <fAntiRollBarBiasFront value="0.600000" />
+
+      <!-- [POPRAWKA] Podniesione aby skompensować wyższy CoM.
+           Wyższe rollCentreHeight = punkt obrotu nadwozia wyżej = mniejszy przechył
+           przy tym samym AntiRollBarForce. Kluczowe dla stabilności przy CoM.Z=0.165. -->
+      <fRollCentreHeightFront value="0.550000" />
+
+      <!-- [POPRAWKA] Tył NIŻSZY niż przód (0.390→0.340).
+           Niższy punkt obrotu z tyłu = tył "siada" bardziej przy przyspieszaniu
+           → to właśnie powoduje że przód idzie w górę. Różnica przód/tył jest kluczowa. -->
+      <fRollCentreHeightRear value="0.500000" />
+
+      <!-- Ciężkie, solidne auto — odporne na uszkodzenia, bez zmian -->
+      <fCollisionDamageMult value="0.550000" />
+      <fWeaponDamageMult value="1.000000" />
+      <fDeformationDamageMult value="0.550000" />
+      <fEngineDamageMult value="1.100000" />
+
+      <!-- Duży zbiornik paliwa Bentaygi, bez zmian -->
+      <fPetrolTankVolume value="90.000000" />
+      <fOilVolume value="9.000000" />
+
+      <fSeatOffsetDistX value="0.000000" />
+      <fSeatOffsetDistY value="0.000000" />
+      <fSeatOffsetDistZ value="0.000000" />
+
+      <nMonetaryValue value="235000" />
+
+      <strModelFlags>440010</strModelFlags>
+      <strHandlingFlags>0</strHandlingFlags>
+      <strDamageFlags>0</strDamageFlags>
+
+      <AIHandling>SPORTS_CAR</AIHandling>
+
+      <SubHandlingData>
+        <Item type="CCarHandlingData">
+          <fBackEndPopUpCarImpulseMult value="0.450000" />
+          <fBackEndPopUpBuildingImpulseMult value="0.250000" />
+          <fBackEndPopUpMaxDeltaSpeed value="0.950000" />
+        </Item>
+        <Item type="NULL" />
+        <Item type="NULL" />
+      </SubHandlingData>
+  </Item>
+  </HandlingData>
+</CHandlingDataMgr>

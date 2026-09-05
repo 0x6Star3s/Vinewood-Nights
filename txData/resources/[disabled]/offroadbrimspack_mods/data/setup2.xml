@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<SSetupData>
+  <deviceName>dlc_offroadbrimspack</deviceName>
+  <datFile>content.xml</datFile>
+  <timeStamp>15/03/2016 01:00:00</timeStamp>
+  <nameHash>offroadbrimspack</nameHash>
+  <contentChangeSets />
+  <contentChangeSetGroups>
+    <Item>
+      <NameHash>GROUP_STARTUP</NameHash>
+      <ContentChangeSets>
+        <Item>offroadbrimspack_AUTOGEN</Item>
+        <Item>offroadbrimspack_UNLOCKS_AUTOGEN</Item>
+      </ContentChangeSets>
+    </Item>
+  </contentChangeSetGroups>
+  <startupScript />
+  <scriptCallstackSize value="0" />
+  <type>EXTRACONTENT_COMPAT_PACK</type>
+  <order value="20" />
+  <minorOrder value="0" />
+  <isLevelPack value="false" />
+  <dependencyPackHash />
+  <requiredVersion />
+  <subPackCount value="0" />
+</SSetupData>
