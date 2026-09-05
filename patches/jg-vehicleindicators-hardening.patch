@@ -1,0 +1,31 @@
+diff --git a/client.lua b/client.lua
+index b85c112..9ac2900 100644
+--- a/client.lua
++++ b/client.lua
+@@ -25,7 +25,7 @@ end
+ 
+ AddStateBagChangeHandler("indicate", nil, function(bagName, key, data)
+   local entity = GetEntityFromStateBagName(bagName)
+-  if entity == 0 then return end
++  if entity == 0 or type(data) ~= "table" then return end
+   for i, status in ipairs(data) do
+     SetVehicleIndicatorLights(entity, i - 1, status)
+   end
+diff --git a/server.lua b/server.lua
+index db5f2aa..8289599 100644
+--- a/server.lua
++++ b/server.lua
+@@ -1,4 +1,11 @@
+ RegisterServerEvent("jg-vehicleindicators:server:set-state", function(netId, value)
++  if type(netId) ~= "number" or type(value) ~= "table" then return end
++  if type(value[1]) ~= "boolean" or type(value[2]) ~= "boolean" or #value ~= 2 then return end
++
+   local vehicle = NetworkGetEntityFromNetworkId(netId)
++  if vehicle == 0 or not DoesEntityExist(vehicle) then return end
++  -- tylko kierowca miga wlasnymi kierunkowskazami
++  if GetPedInVehicleSeat(vehicle, -1) ~= GetPlayerPed(source) then return end
++
+   Entity(vehicle).state.indicate = value
+-end)
+\ No newline at end of file
++end)
