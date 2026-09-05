@@ -3645,17 +3645,17 @@ function MenuHandler:SwitchTo(currentMenu, newMenu, newMenuCurrentSelection, inh
     end
     if newMenuCurrentSelection > 1 then
 
-        local max = #newer.Items;
+        local max = #newMenu.Items;
 
-        if max >= newer._maxItemsOnScreen then
-            max = newer._maxItemsOnScreen
+        if max >= newMenu._maxItemsOnScreen then
+            max = newMenu._maxItemsOnScreen
         end
 
-        newer._currentSelection = math.max(1, math.min(newMenuCurrentSelection, #newer.Items));
-        if newMenuCurrentSelection >= newer.topEdge + newer._visibleItems then
-            newer.topEdge = math.max(1, math.min(newMenuCurrentSelection, #newer.Items - newer._visibleItems))
-        elseif newMenuCurrentSelection < newer.topEdge then
-            newer.topEdge = newMenuCurrentSelection
+        newMenu._currentSelection = math.max(1, math.min(newMenuCurrentSelection, #newMenu.Items));
+        if newMenuCurrentSelection >= newMenu.topEdge + newMenu._visibleItems then
+            newMenu.topEdge = math.max(1, math.min(newMenuCurrentSelection, #newMenu.Items - newMenu._visibleItems))
+        elseif newMenuCurrentSelection < newMenu.topEdge then
+            newMenu.topEdge = newMenuCurrentSelection
         end
     end
 
