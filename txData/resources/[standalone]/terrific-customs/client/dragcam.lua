@@ -116,7 +116,7 @@ end
 DragCam = {}
 
 ---@param entity integer
----@param opts? { initial?: number, min?: number, max?: number, scrollIncrements?: number }
+---@param opts? { initial?: number, min?: number, max?: number, scrollIncrements?: number, angle?: number }
 function DragCam.start(entity, opts)
     if running then return end
     opts = opts or {}
@@ -127,12 +127,21 @@ function DragCam.start(entity, opts)
     gRadiusMin       = opts.min or 2.5
     gRadiusMax       = opts.max or 10.0
     scrollIncrements = opts.scrollIncrements or 0.5
-    angleY, angleZ   = 0.0, 0.0
+    angleY, angleZ   = clamp(opts.angle or 0.0, 0.0, 89.0), 0.0 -- >0 = start z gory
     isFirstPersonView = false
 
     cam = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
     RenderScriptCams(true, true, 0, true, false)
     inputListener()
+end
+
+--- Podmiana śledzonego pojazdu bez resetu kąta i zoomu (lista aut w garażu).
+--- Zwraca false, gdy kamera nie działa - wtedy trzeba ją wystartować.
+function DragCam.setEntity(entity)
+    if not running then return false end
+    gEntity = entity
+    setCamPosition()
+    return true
 end
 
 function DragCam.stop()

@@ -136,6 +136,12 @@ end
 -- wracamy do tej migawki, wiec niezatwierdzone zmiany znikaja i nie kosztuja.
 local function commit()
     saved = lib.getVehicleProperties(veh)
+    -- Zapis do bazy po kazdym zakupie: bez tego tuning znikal, gdy auto nie trafilo do garazu
+    -- przed restartem. Event z qb-mechanicjob sprawdza, czy auto jest w player_vehicles.
+    -- Format QBCore (nie ox_lib) - garaz odczytuje doorStatus/windowStatus z tych mods.
+    if shopOpen then
+        TriggerServerEvent('qb-vehicletuning:server:SaveVehicleProps', QBCore.Functions.GetVehicleProperties(veh))
+    end
 end
 
 local function revert()
@@ -145,36 +151,58 @@ local function revert()
 end
 
 
---- Pozycja ze strzalkami: <- / -> = podglad na aucie, Enter = kupno.
+local function newMenu(title, subtitle)
+    local menu = UIMenu.New(title, subtitle, 50, 50, true, BANNER, BANNER, false)
+    menu:MaxItemsOnScreen(10)
+    -- Kolko myszy zostaje kamerze. ScaleformUI czyta 241/242 (CursorScroll), a dragcam
+    -- 14/15 (WeaponWheel) - to ten sam fizyczny scroll, wiec bez tego menu przewijalo
+    -- sie razem z zoomem. Po liscie chodzi sie strzalkami (172/173), te dzialaja dalej.
+    menu:MouseWheelControlEnabled(false)
+    return menu
+end
+
+--- Pozycja otwierajaca podmenu z pionowa lista wariantow: gora/dol = podglad na
+--- aucie, Enter = kupno. Zamontowane ma etykiete zamiast ceny.
 ---@param label string
 ---@param desc string
 ---@param entries table lista { text, price, category, mod, index, apply }
----@param current number indeks startowy (1-based)
-local function listItem(label, desc, entries, current)
-    -- UIMenuListItem dziedziczy po UIMenuDynamicListItem, ktory rzuca bledem na
-    -- RightLabel - cena musi siedziec w samej wartosci miedzy strzalkami.
-    -- LeftBadge nie jest blokowany, wiec ikonka auta zostaje.
-    local texts = {}
-    for i = 1, #entries do
-        local entry = entries[i]
-        texts[i] = (entry.price or 0) > 0
-            and ('%s  %s'):format(entry.text, money(entry.price))
-            or entry.text
+---@param current number|nil indeks tego, co auto juz ma (nil = nic z tej listy)
+local function partItem(label, desc, entries, current)
+    local bought = (current and current >= 1 and current <= #entries) and current or nil
+
+    local item = UIMenuItem.New(label, desc)
+    local menu = newMenu(label, 'GORA/DOL = PODGLAD, ENTER = KUP')
+    local rows = {}
+
+    local function refresh()
+        for i, row in ipairs(rows) do
+            row:RightLabel(i == bought and 'ZAMONTOWANE'
+                or (entries[i].price or 0) > 0 and money(entries[i].price) or '')
+        end
+        item:RightLabel(bought and entries[bought].text or '')
+        item:LeftBadge(bought and bought > 1 and BadgeStyle.CAR or BadgeStyle.NONE)
     end
 
-    current = (current and current >= 1 and current <= #entries) and current or 1
+    for i, entry in ipairs(entries) do
+        rows[i] = UIMenuItem.New(entry.text, desc)
+        menu:AddItem(rows[i])
+    end
+    refresh()
 
-    local item = UIMenuListItem.New(label, texts, current, desc)
-    if current > 1 then item:LeftBadge(BadgeStyle.CAR) end
-
-    local bought = current
-
-    item.OnListChanged = function(_, _, index)
+    menu.OnIndexChange = function(_, index)
         entries[index].apply()
     end
 
-    item.OnListSelected = function(_, it, index)
+    -- wyjscie z podmenu kasuje podglad, za ktory nikt nie zaplacil
+    menu.OnMenuClose = function()
+        if bought then entries[bought].apply() end
+    end
+
+    menu.OnItemSelect = function(_, _, index)
         if paying then return end
+        -- to juz siedzi w aucie: Enter nie ma zdejmowac kasy drugi raz
+        if index == bought then return end
+
         local entry = entries[index]
 
         if (entry.price or 0) > 0 then
@@ -184,8 +212,7 @@ local function listItem(label, desc, entries, current)
 
             if not ok then
                 notify('Nie stac Cie na te czesc.', 'error')
-                it:Index(bought)
-                entries[bought].apply()
+                if bought then entries[bought].apply() end
                 return
             end
         end
@@ -194,21 +221,15 @@ local function listItem(label, desc, entries, current)
         bought = index
         if entry.commit then entry.commit() end
         commit()
-        it:LeftBadge(index > 1 and BadgeStyle.CAR or BadgeStyle.NONE)
+        refresh()
         notify(('%s: gotowe.'):format(label), 'success')
     end
 
-    return item
-end
+    item.Activated = function(parent)
+        parent:SwitchTo(menu, bought or 1, true)
+    end
 
-local function newMenu(title, subtitle)
-    local menu = UIMenu.New(title, subtitle, 50, 50, true, BANNER, BANNER, false)
-    menu:MaxItemsOnScreen(10)
-    -- Kolko myszy zostaje kamerze. ScaleformUI czyta 241/242 (CursorScroll), a dragcam
-    -- 14/15 (WeaponWheel) - to ten sam fizyczny scroll, wiec bez tego menu przewijalo
-    -- sie razem z zoomem. Po liscie chodzi sie strzalkami (172/173), te dzialaja dalej.
-    menu:MouseWheelControlEnabled(false)
-    return menu
+    return item
 end
 
 -- ---------- kategorie ----------
@@ -255,7 +276,7 @@ local function modEntries(part, category)
 end
 
 local function partsMenu(title, parts, category)
-    local menu = newMenu(title, 'STRZALKI = PODGLAD, ENTER = KUP')
+    local menu = newMenu(title, 'ENTER = OTWORZ LISTE')
 
     for _, part in ipairs(parts) do
         local available = part.toggle and 1 or GetNumVehicleMods(veh, part.mod)
@@ -263,7 +284,7 @@ local function partsMenu(title, parts, category)
             local current = part.toggle
                 and (IsToggleModOn(veh, part.mod) and 2 or 1)
                 or (GetVehicleMod(veh, part.mod) + 2)
-            menu:AddItem(listItem(part.label, part.desc or '', modEntries(part, category), current))
+            menu:AddItem(partItem(part.label, part.desc or '', modEntries(part, category), current))
         end
     end
 
@@ -275,7 +296,7 @@ local function partsMenu(title, parts, category)
 end
 
 local function wheelsMenu()
-    local menu = newMenu('Felgi', 'STRZALKI = PODGLAD, ENTER = KUP')
+    local menu = newMenu('Felgi', 'ENTER = OTWORZ LISTE')
     local originalType = GetVehicleWheelType(veh)
     local originalMod = GetVehicleMod(veh, 23)
 
@@ -310,7 +331,7 @@ local function wheelsMenu()
             end
 
             local current = (wheelType.id == originalType) and (GetVehicleMod(veh, 23) + 2) or 1
-            menu:AddItem(listItem(wheelType.label, ('%s modeli'):format(count), entries, current))
+            menu:AddItem(partItem(wheelType.label, ('%s modeli'):format(count), entries, current))
         end
     end
 
@@ -326,6 +347,20 @@ local function wheelsMenu()
     end
 
     return menu
+end
+
+--- Indeks pozycji z pasujacym polem id. Nil = auto ma cos spoza listy sklepu.
+local function idIndex(list, id)
+    for i = 1, #list do
+        if list[i].id == id then return i end
+    end
+end
+
+--- Indeks koloru RGB w tabeli RGB. Nil = kolor spoza palety.
+local function rgbIndex(r, g, b)
+    for i = 1, #RGB do
+        if RGB[i].r == r and RGB[i].g == g and RGB[i].b == b then return i end
+    end
 end
 
 local function colorEntries(slot)
@@ -347,14 +382,17 @@ local function colorEntries(slot)
 end
 
 local function paintMenu()
-    local menu = newMenu('Lakier', 'STRZALKI = PODGLAD, ENTER = KUP')
-    menu:AddItem(listItem('Kolor podstawowy', 'Glowny kolor nadwozia.', colorEntries('primary'), 1))
-    menu:AddItem(listItem('Kolor dodatkowy', 'Detale i pasy.', colorEntries('secondary'), 1))
+    local menu = newMenu('Lakier', 'ENTER = OTWORZ LISTE')
+    local primary, secondary = GetVehicleColours(veh)
+    menu:AddItem(partItem('Kolor podstawowy', 'Glowny kolor nadwozia.', colorEntries('primary'),
+        idIndex(COLORS, primary)))
+    menu:AddItem(partItem('Kolor dodatkowy', 'Detale i pasy.', colorEntries('secondary'),
+        idIndex(COLORS, secondary)))
     return menu
 end
 
 local function extrasMenu()
-    local menu = newMenu('Oswietlenie i dodatki', 'STRZALKI = PODGLAD, ENTER = KUP')
+    local menu = newMenu('Oswietlenie i dodatki', 'ENTER = OTWORZ LISTE')
 
     local tints = {}
     for _, tint in ipairs(TINTS) do
@@ -363,7 +401,8 @@ local function extrasMenu()
             apply = function() SetVehicleWindowTint(veh, tint.id) end,
         }
     end
-    menu:AddItem(listItem('Przyciemniane szyby', 'Folia na szybach.', tints, 1))
+    menu:AddItem(partItem('Przyciemniane szyby', 'Folia na szybach.', tints,
+        idIndex(TINTS, GetVehicleWindowTint(veh))))
 
     local xenons = { {
         text = 'Fabryczne', price = 0, category = 'xenon',
@@ -383,7 +422,13 @@ local function extrasMenu()
             end,
         }
     end
-    menu:AddItem(listItem('Ksenony', 'Kolor swiatel przednich.', xenons, 1))
+    local xenonCurrent = 1
+    if IsToggleModOn(veh, 22) then
+        local colorId = GetVehicleHeadlightsColour(veh)
+        if colorId == 255 then colorId = 0 end -- ksenon bez wybranego koloru swieci na bialo
+        xenonCurrent = colorId < #XENON and colorId + 2 or nil
+    end
+    menu:AddItem(partItem('Ksenony', 'Kolor swiatel przednich.', xenons, xenonCurrent))
 
     local neons = { {
         text = 'Wylaczone', price = 0, category = 'neon',
@@ -400,7 +445,12 @@ local function extrasMenu()
             end,
         }
     end
-    menu:AddItem(listItem('Neony', 'Podswietlenie podwozia z czterech stron.', neons, 1))
+    local neonCurrent = 1
+    if IsVehicleNeonLightEnabled(veh, 0) then
+        local i = rgbIndex(GetVehicleNeonLightsColour(veh))
+        neonCurrent = i and i + 1 or nil
+    end
+    menu:AddItem(partItem('Neony', 'Podswietlenie podwozia z czterech stron.', neons, neonCurrent))
 
     local smoke = { {
         text = 'Brak', price = 0, category = 'tyresmoke',
@@ -419,7 +469,12 @@ local function extrasMenu()
             end,
         }
     end
-    menu:AddItem(listItem('Dym z opon', 'Kolor dymu przy buksowaniu.', smoke, 1))
+    local smokeCurrent = 1
+    if IsToggleModOn(veh, 20) then
+        local i = rgbIndex(GetVehicleTyreSmokeColor(veh))
+        smokeCurrent = i and i + 1 or nil
+    end
+    menu:AddItem(partItem('Dym z opon', 'Kolor dymu przy buksowaniu.', smoke, smokeCurrent))
 
     local plates = {}
     for _, style in ipairs(PLATE_STYLES) do
@@ -428,10 +483,10 @@ local function extrasMenu()
             apply = function() SetVehicleNumberPlateTextIndex(veh, style.id) end,
         }
     end
-    menu:AddItem(listItem('Tablice rejestracyjne', 'Wzor tablicy.', plates,
+    menu:AddItem(partItem('Tablice rejestracyjne', 'Wzor tablicy.', plates,
         GetVehicleNumberPlateTextIndex(veh) + 1))
 
-    menu:AddItem(listItem('Opony kuloodporne', 'Opony nie lapia gumy od strzalow.', {
+    menu:AddItem(partItem('Opony kuloodporne', 'Opony nie lapia gumy od strzalow.', {
         { text = 'Zwykle', price = 0, category = 'bulletproof',
           apply = function() SetVehicleTyresCanBurst(veh, true) end },
         { text = 'Kuloodporne', price = Config.PriceOf('bulletproof'), category = 'bulletproof',
@@ -447,13 +502,21 @@ local ecuBaseline = {} -- entity -> { [pole handlingu] = wartosc fabryczna }
 local ecuPaid     = {} -- entity -> oplacone poziomy
 local ecuPreview           -- poziomy widoczne w podgladzie, zerowane przy wejsciu do warsztatu
 local absPaid   = {}       -- entity -> { 1 = brak, 2 = zamontowany }
+local antilagPaid = {}     -- j.w., czyta to terrific-antilag przez export HasAntilag
+local tractionPaid = {}    -- j.w., kontrola trakcji
+local tractionOff  = false -- kierowca wylaczyl ja w aucie (radialne menu)
+local absActive, tractionActive = false, false -- czy system wlasnie pracuje (kontrolki)
+local antilagFlashUntil = 0
 
 --- Fabryczna wartosc pola. Czytamy raz na pojazd i juz nigdy jej nie nadpisujemy,
 --- inaczej kolejne tuningi mnozylyby sie po sobie.
 local function ecuStock(vehicle, field)
     local store = ecuBaseline[vehicle]
-    if not store then
-        store = {}
+    local model = GetEntityModel(vehicle)
+    -- uchwyt encji wraca do puli po despawnie: inny model pod tym samym numerem to inne auto,
+    -- stara baza poszlaby w mnozniki nowego (np. drive force z poprzedniego samochodu)
+    if not store or store.model ~= model then
+        store = { model = model }
         ecuBaseline[vehicle] = store
     end
     if store[field] == nil then
@@ -494,7 +557,7 @@ local function applyEcu(vehicle, levels)
 end
 
 local function ecuMenu()
-    local menu = newMenu('Komputer sterujacy', 'STRZALKI = PODGLAD, ENTER = KUP')
+    local menu = newMenu('Komputer sterujacy', 'ENTER = OTWORZ LISTE')
     local paid = ecuPaid[veh] or levelDefaults(Config.Ecu)
 
     for i, knob in ipairs(Config.Ecu) do
@@ -521,7 +584,7 @@ local function ecuMenu()
             }
         end
 
-        menu:AddItem(listItem(knob.label, knob.desc, entries, paid[i] or 1))
+        menu:AddItem(partItem(knob.label, knob.desc, entries, paid[i] or 1))
     end
 
     -- ABS siedzi w tej samej zakladce, bo to tez elektronika, ale ma wlasny rodzaj
@@ -547,55 +610,239 @@ local function ecuMenu()
         }
     end
 
-    menu:AddItem(listItem(absKnob.label, absKnob.desc, absEntries, (absPaid[veh] or { 1 })[1]))
+    menu:AddItem(partItem(absKnob.label, absKnob.desc, absEntries, (absPaid[veh] or { 1 })[1]))
+
+    -- Antilag - jak ABS: nic nie montujemy w pojezdzie, tylko zapisujemy zakup,
+    -- a strzelaniem zajmuje sie zasob terrific-antilag.
+    local alKnob = Config.Antilag[1]
+    local alEntries = {}
+
+    for level = 1, #alKnob.values do
+        local lvl = level
+        alEntries[level] = {
+            text     = alKnob.names[lvl],
+            price    = Config.PriceOf('antilag', nil, lvl - 1),
+            category = 'antilag',
+            index    = lvl - 1,
+            apply    = function() end,
+            commit   = function()
+                antilagPaid[veh] = { lvl }
+                TriggerServerEvent('terrific-customs:server:saveTune',
+                    GetVehicleNumberPlateText(veh), 'antilag', antilagPaid[veh])
+            end,
+        }
+    end
+
+    menu:AddItem(partItem(alKnob.label, alKnob.desc, alEntries, (antilagPaid[veh] or { 1 })[1]))
+
+    -- Kontrola trakcji - znowu ten sam wzorzec co ABS.
+    local tcKnob = Config.Traction[1]
+    local tcEntries = {}
+
+    for level = 1, #tcKnob.values do
+        local lvl = level
+        tcEntries[level] = {
+            text     = tcKnob.names[lvl],
+            price    = Config.PriceOf('traction', nil, lvl - 1),
+            category = 'traction',
+            index    = lvl - 1,
+            apply    = function() end,
+            commit   = function()
+                tractionPaid[veh] = { lvl }
+                TriggerServerEvent('terrific-customs:server:saveTune',
+                    GetVehicleNumberPlateText(veh), 'traction', tractionPaid[veh])
+            end,
+        }
+    end
+
+    menu:AddItem(partItem(tcKnob.label, tcKnob.desc, tcEntries, (tractionPaid[veh] or { 1 })[1]))
 
     return menu
 end
+
+--- Czy to auto ma kupiony antilag. Czyta terrific-antilag.
+exports('HasAntilag', function(vehicle)
+    return (antilagPaid[vehicle] or { 1 })[1] == 2
+end)
+
+--- terrific-antilag zapala kontrolke przy kazdym strzale.
+exports('FlashAntilag', function()
+    antilagFlashUntil = GetGameTimer() + 250
+end)
+
+-- Przycisk "TC OFF" - radialne menu w aucie.
+RegisterNetEvent('terrific-customs:client:toggleTraction', function()
+    local vehicle = GetVehiclePedIsIn(cache.ped, false)
+    if vehicle == 0 or GetPedInVehicleSeat(vehicle, -1) ~= cache.ped then return end
+
+    if (tractionPaid[vehicle] or { 1 })[1] ~= 2 then
+        notify('To auto nie ma kontroli trakcji.', 'error')
+        return
+    end
+
+    tractionOff = not tractionOff
+    if not tractionOff then SetVehicleEngineTorqueMultiplier(vehicle, 1.0) end
+    notify(tractionOff and 'Kontrola trakcji wylaczona.' or 'Kontrola trakcji wlaczona.', 'inform')
+end)
+
+-- Kontrola trakcji: gdy kolo kreci sie wyraznie szybciej niz jedzie auto, znaczy ze
+-- buksuje - tniemy moment obrotowy na te klatke. SetVehicleEngineTorqueMultiplier
+-- dziala tylko w klatce, w ktorej je zawolamy, wiec pilnujemy go co klatke.
+CreateThread(function()
+    while true do
+        local wait = 250
+        local vehicle = GetVehiclePedIsIn(cache.ped, false)
+
+        if vehicle ~= 0 and GetPedInVehicleSeat(vehicle, -1) == cache.ped
+            and (tractionPaid[vehicle] or { 1 })[1] == 2 and not tractionOff then
+            wait = 0
+
+            local speed = GetEntitySpeed(vehicle)
+            local slipping = false
+
+            if speed > Config.TractionMinSpeed and IsControlPressed(0, 71) then
+                for i = 0, GetVehicleNumberOfWheels(vehicle) - 1 do
+                    if math.abs(GetVehicleWheelSpeed(vehicle, i)) > speed * Config.TractionSlipRatio then
+                        slipping = true
+                        break
+                    end
+                end
+            end
+
+            tractionActive = slipping
+            SetVehicleEngineTorqueMultiplier(vehicle, slipping and Config.TractionCut or 1.0)
+        else
+            tractionActive = false
+        end
+
+        Wait(wait)
+    end
+end)
+
+-- Kontrolki jak na desce rozdzielczej: przygaszone = system jest w aucie,
+-- jasne = wlasnie pracuje. Rysujemy tylko dla auta, ktore sam prowadzisz.
+local function telltale(text, x, y, color)
+    SetTextFont(4)
+    SetTextScale(0.0, 0.36)
+    SetTextCentre(true)
+    SetTextColour(color[1], color[2], color[3], color[4])
+    SetTextOutline()
+    SetTextEntry('STRING')
+    AddTextComponentString(text)
+    DrawText(x, y)
+end
+
+local DIM = { 150, 150, 150, 130 }
+
+CreateThread(function()
+    while true do
+        local wait = 500
+        local vehicle = Config.Telltales.enabled and GetVehiclePedIsIn(cache.ped, false) or 0
+
+        if vehicle ~= 0 and GetPedInVehicleSeat(vehicle, -1) == cache.ped then
+            local hasAbs      = (absPaid[vehicle] or { 1 })[1] == 2
+            local hasTraction = (tractionPaid[vehicle] or { 1 })[1] == 2
+            local hasAntilag  = (antilagPaid[vehicle] or { 1 })[1] == 2
+
+            if hasAbs or hasTraction or hasAntilag then
+                wait = 0
+                local x = Config.Telltales.x
+
+                if hasAbs then
+                    telltale('ABS', x, Config.Telltales.y, absActive and { 255, 190, 40, 255 } or DIM)
+                    x = x + 0.030
+                end
+                if hasTraction then
+                    local color = DIM
+                    if tractionOff then color = { 255, 70, 70, 255 }
+                    elseif tractionActive then color = { 255, 190, 40, 255 } end
+                    telltale(tractionOff and 'TC OFF' or 'TC', x, Config.Telltales.y, color)
+                    x = x + (tractionOff and 0.045 or 0.030)
+                end
+                if hasAntilag then
+                    telltale('AL', x, Config.Telltales.y,
+                        GetGameTimer() < antilagFlashUntil and { 255, 120, 30, 255 } or DIM)
+                end
+            end
+        end
+
+        Wait(wait)
+    end
+end)
 
 -- ---------- dystanse i pochylenie kol ----------
 
 -- Natywki FiveM, bez vstancera. Wartosci dokladamy do fabrycznego ustawienia kola,
 -- symetrycznie: lewe w minus, prawe w plus.
-local stanceBaseline = {} -- entity -> { x = {..}, y = {..} }
+local stanceBaseline = {} -- entity -> { model, wheels, x = {..}, y = {..} }
+local stanceTargets  = {} -- entity -> { levels, stock, wheels, x = {..}, y = {..} } - policzone raz na zmiane poziomu
 local stancePaid     = {}
 local stancePreview
 
 local function stanceStock(vehicle)
     local store = stanceBaseline[vehicle]
-    if store then return store end
+    local model = GetEntityModel(vehicle)
+    if store and store.model == model then return store end
 
-    store = { x = {}, y = {} }
-    for i = 0, GetVehicleNumberOfWheels(vehicle) - 1 do
+    -- uchwyt encji wraca do puli po despawnie: inny model = inne auto, stara baza do kosza.
+    -- Ten sam model pod starym uchwytem ma te same fabryczne wartosci, wiec zostaje.
+    store = { model = model, wheels = GetVehicleNumberOfWheels(vehicle), x = {}, y = {} }
+    for i = 0, store.wheels - 1 do
         store.x[i] = GetVehicleWheelXOffset(vehicle, i)
         store.y[i] = GetVehicleWheelYRotation(vehicle, i)
     end
 
     stanceBaseline[vehicle] = store
+    stanceTargets[vehicle] = nil
     return store
 end
 
-local function applyStance(vehicle, levels)
-    if not DoesEntityExist(vehicle) then return end
+local function sameLevels(a, b)
+    for i = 1, #Config.Stance do
+        if (a[i] or 1) ~= (b[i] or 1) then return false end
+    end
+    return true
+end
 
+-- Docelowe offsety per kolo. Liczone tylko gdy zmieni sie poziom albo baza - petla
+-- co klatke dostaje gotowe liczby i nie alokuje nic (wczesniej: nowa tabela + 4 odczyty
+-- configu + GetVehicleNumberOfWheels w kazdej klatce).
+local function stanceTargetsFor(vehicle, levels)
     local stock = stanceStock(vehicle)
+    local cached = stanceTargets[vehicle]
+    if cached and cached.stock == stock and sameLevels(cached.levels, levels) then return cached end
+
     local value = {}
     for i, knob in ipairs(Config.Stance) do
         value[knob.key] = knob.values[levels[i] or 1] or 0.0
     end
 
-    for i = 0, GetVehicleNumberOfWheels(vehicle) - 1 do
+    cached = { levels = levelCopy(Config.Stance, levels), stock = stock, wheels = stock.wheels, x = {}, y = {} }
+    for i = 0, stock.wheels - 1 do
         local front = i < 2          -- 0/1 to przednia os, reszta liczy sie jako tyl
         local left  = (i % 2) == 0
         local spacing = front and value.frontSpacing or value.rearSpacing
         local camber  = front and value.frontCamber or value.rearCamber
+        cached.x[i] = stock.x[i] + (left and -spacing or spacing)
+        cached.y[i] = stock.y[i] + (left and -camber or camber)
+    end
 
-        SetVehicleWheelXOffset(vehicle, i, stock.x[i] + (left and -spacing or spacing))
-        SetVehicleWheelYRotation(vehicle, i, stock.y[i] + (left and -camber or camber))
+    stanceTargets[vehicle] = cached
+    return cached
+end
+
+local function applyStance(vehicle, levels)
+    if not DoesEntityExist(vehicle) then return end
+
+    local target = stanceTargetsFor(vehicle, levels)
+    for i = 0, target.wheels - 1 do
+        SetVehicleWheelXOffset(vehicle, i, target.x[i])
+        SetVehicleWheelYRotation(vehicle, i, target.y[i])
     end
 end
 
 local function stanceMenu()
-    local menu = newMenu('Dystanse i pochylenie', 'STRZALKI = PODGLAD, ENTER = KUP')
+    local menu = newMenu('Dystanse i pochylenie', 'ENTER = OTWORZ LISTE')
     local paid = stancePaid[veh] or levelDefaults(Config.Stance)
 
     for i, knob in ipairs(Config.Stance) do
@@ -621,7 +868,7 @@ local function stanceMenu()
             }
         end
 
-        menu:AddItem(listItem(knob.label, knob.desc, entries, paid[i] or 1))
+        menu:AddItem(partItem(knob.label, knob.desc, entries, paid[i] or 1))
     end
 
     return menu
@@ -654,11 +901,16 @@ CreateThread(function()
                     end
                 end
 
+                absActive = locked
                 if locked then
                     DisableControlAction(0, 72, true)
                     SetVehicleBrakeLights(vehicle, true) -- swiatla maja sie palic mimo pulsowania
                 end
+            else
+                absActive = false
             end
+        else
+            absActive = false
         end
 
         Wait(wait)
@@ -713,6 +965,11 @@ CreateThread(function()
             local plate = GetVehicleNumberPlateText(vehicle)
             local stored = plate and lib.callback.await('terrific-customs:server:getTune', false, plate)
 
+            -- uchwyt encji moglo dostac inne auto: bez tego nowy samochod jechalby na tuningu
+            -- poprzedniego, dopoki serwer nie odpowie (albo na zawsze, gdy nowy nie ma tuningu)
+            ecuPaid[vehicle], stancePaid[vehicle], absPaid[vehicle] = nil, nil, nil
+            antilagPaid[vehicle], tractionPaid[vehicle] = nil, nil
+
             if stored then
                 if stored.ecu then
                     ecuPaid[vehicle] = levelCopy(Config.Ecu, stored.ecu)
@@ -725,7 +982,15 @@ CreateThread(function()
                 if stored.abs then
                     absPaid[vehicle] = levelCopy(Config.Abs, stored.abs)
                 end
+                if stored.antilag then
+                    antilagPaid[vehicle] = levelCopy(Config.Antilag, stored.antilag)
+                end
+                if stored.traction then
+                    tractionPaid[vehicle] = levelCopy(Config.Traction, stored.traction)
+                end
             end
+
+            tractionOff = false -- nowe auto = kontrola trakcji znowu wlaczona
         end
     end
 end)

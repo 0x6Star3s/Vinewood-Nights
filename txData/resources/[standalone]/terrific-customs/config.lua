@@ -55,6 +55,8 @@ Config.Prices = {
     ecu         = 9000, -- za kazdy poziom powyzej fabrycznego
     stance      = 3000, -- j.w.
     abs         = 15000,
+    antilag     = 15000,
+    traction    = 12000,
     repair      = 5000,
 }
 
@@ -134,6 +136,40 @@ Config.Abs = {
     },
 }
 
+-- Antilag (strzaly z wydechu). Ta sama mechanika co ABS: nic nie robi z pojazdem,
+-- tylko odblokowuje zasob terrific-antilag na tym aucie.
+Config.Antilag = {
+    {
+        label  = 'Antilag',
+        desc   = 'Strzaly i plomienie z wydechu przy zdejmowaniu gazu na wysokich obrotach.',
+        values = { false, true },
+        names  = { 'Brak', 'Zamontowany' },
+    },
+}
+
+-- Kontrola trakcji. Tnie moment obrotowy, gdy kola buksuja. Kierowca moze ja wylaczyc
+-- w aucie (radialne menu -> Kontrola trakcji), tak jak przyciskiem TC OFF w prawdziwym aucie.
+Config.Traction = {
+    {
+        label  = 'Kontrola trakcji',
+        desc   = 'Tnie moc, gdy kola buksuja. W aucie wylaczysz ja radialnym menu.',
+        values = { false, true },
+        names  = { 'Brak', 'Zamontowana' },
+    },
+}
+
+Config.TractionMinSpeed  = 2.0  -- m/s, ponizej nie ingeruje (ruszanie, manewrowanie)
+Config.TractionSlipRatio = 1.25 -- kolo szybsze niz tyle x predkosc auta = buksuje
+Config.TractionCut       = 0.35 -- mnoznik momentu w chwili buksowania
+
+-- Kontrolki na ekranie, jak na desce rozdzielczej: przygaszone = system zamontowany,
+-- jasne = wlasnie dziala. Przesun x/y, jesli zaslaniaja Twoj HUD.
+Config.Telltales = {
+    enabled = true,
+    x       = 0.217, -- pod srodkiem tarczy licznika; kolejne kontrolki ida w prawo co 0.030
+    y       = 0.938, -- ponizej tarczy licznika; ikony gracza koncza sie na x ~0.19, wiec nie koliduja
+}
+
 Config.AbsMinSpeed  = 4.0  -- m/s, ponizej ABS nie ingeruje (manewrowanie, cofanie)
 Config.AbsLockRatio = 0.45 -- kolo wolniejsze niz tyle x predkosc auta = zablokowane
 
@@ -152,6 +188,14 @@ function Config.PriceOf(category, mod, index)
 
     if category == 'abs' then
         return Config.Prices.abs * (index or 0)
+    end
+
+    if category == 'antilag' then
+        return Config.Prices.antilag * (index or 0)
+    end
+
+    if category == 'traction' then
+        return Config.Prices.traction * (index or 0)
     end
 
     if category == 'performance' then

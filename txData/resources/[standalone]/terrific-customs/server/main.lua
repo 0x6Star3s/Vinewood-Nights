@@ -14,6 +14,8 @@ local VALID_CATEGORIES = {
     ecu = true,
     stance = true,
     abs = true,
+    antilag = true,
+    traction = true,
     repair = true,
 }
 
@@ -142,12 +144,16 @@ local KINDS = {
     ecu    = function(knob) return knob.mult and #knob.mult or #knob.absolute end,
     stance = function(knob) return #knob.values end,
     abs    = function(knob) return #knob.values end,
+    antilag = function(knob) return #knob.values end,
+    traction = function(knob) return #knob.values end,
 }
 
 local KNOBS = {
     ecu    = function() return Config.Ecu end,
     stance = function() return Config.Stance end,
     abs    = function() return Config.Abs end,
+    antilag = function() return Config.Antilag end,
+    traction = function() return Config.Traction end,
 }
 
 RegisterNetEvent('terrific-customs:server:saveTune', function(plate, kind, levels)
