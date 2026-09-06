@@ -2,22 +2,34 @@
 
 ## O serwerze
 
-Serwer roleplay w GTA V, w którym wszystko kręci się wokół samochodów.
+**Vinewood Nights** to serwer roleplay zbudowany wokół jednej rzeczy – motoryzacji.
 
-Czego możesz się spodziewać:
+Nie jest to kolejny serwer, na którym auto jest tylko sposobem na dojechanie
+z punktu A do punktu B. Tutaj samochód jest środkiem ciężkości całego świata:
+tym, o czym się rozmawia, na co się pracuje, czym się ściga, co się traci.
+Całe otoczenie – garaże, warsztaty, lawety, ludzie i pieniądze – jest ułożone
+tak, żeby to wspierać.
 
-- **Auta jedżą jak naprawdę** – fizyka każdego pojazdu liczona z jego
-  rzeczywistej masy, mocy, napędu i przełożeń. SUV kołysze się na zakrętach,
-  tylnonapędowe ucieka tyłem, hipersamochód trzeba umieć opanować.
-- **Płynna gra** – tekstury każdego auta są kontrolowane i przycinane, więc
-  serwer nie klatkuje i nie wywala gry przy dużej liście pojazdów.
-- **Życie wokół auta** – garaże pamiętające, gdzie i w jakim stanie zostawiłeś
-  wóz, kluczyki, które można zgubić albo komuś ukraść, mechanik-gracz, laweta,
-  tuning realnie zmieniający prowadzenie, bank i konto.
-- **Po polsku** – menu i komunikaty w języku polskim, w stylu gry, bez
-  czatowych komend.
+Postawiliśmy na immersję zamiast na długość listy pojazdów. Każde auto ma
+policzone parametry na podstawie swoich rzeczywistych danych – masy, mocy,
+napędu, przełożeń – więc jedzie tak, jak powinno jechać, a nie tak, jak
+ktoś ustawił na oko. Poczujesz różnicę między przednim a tylnym napędem,
+między ciężkim SUV-em a lekkim coupe, między autem, które wybacza błędy,
+a takim, które trzeba umieć opanować.
 
-Dla graczy, którzy w GTA lubią przede wszystkim jeździć.
+Ta sama zasada dotyczy optymalizacji. Każdy pojazd przechodzi przez kontrolę
+tekstur i modeli, zanim trafi na serwer – bo płynna gra jest częścią immersji.
+Żadnych przycieć na zjeździe z autostrady, żadnych wywalek przy wjeździe
+w zatłoczoną dzielnicę.
+
+Wokół tego zbudowana jest reszta: garaże, które pamiętają gdzie i w jakim
+stanie zostawiłeś wóz. Kluczyki, które można zgubić, pożyczyć albo komuś
+ukraść. Mechanik, który jest drugim graczem, a nie automatem. Laweta, którą
+wzywasz, kiedy coś pójdzie nie tak. Tuning, który naprawdę zmienia
+zachowanie auta. Wszystko po polsku, w interfejsie w stylu gry – bez
+ścian tekstu na czacie.
+
+Jeśli szukasz świata, w którym jazda coś znaczy – jesteś u siebie.
 
 ---
 
