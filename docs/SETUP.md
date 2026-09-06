@@ -53,6 +53,81 @@ z `docs/PLAN.md` są wyłączone.
 
 ---
 
+## Dlaczego tak
+
+Krótkie uzasadnienie decyzji technicznych – żeby za pół roku nie zgadywać,
+po co coś tu jest.
+
+### Baza w Dockerze, nie XAMPP
+
+Serwer FiveM potrzebuje MySQL-a i historycznie stawiało się go przez XAMPP albo
+instalację systemową. Problem w tym, że taka baza jest niewidoczna dla repo:
+wersja silnika zależy od tego, co akurat zainstalowano, dane leżą gdzieś
+w `C:\`, a odtworzenie środowiska na innej maszynie to ręczna robota.
+
+`docker-compose.yml` przypina **MariaDB 10.6** – zawsze tę samą wersję, z tą samą
+konfiguracją, niezależnie od maszyny. Dane siedzą w nazwanym wolumenie
+(`projectterrific-db-data`), więc `docker compose down` nie kasuje graczy,
+a skrypty z `docker/mariadb/init/` wykonują się automatycznie przy pierwszym
+starcie pustej bazy.
+
+**Port 3307, nie 3306** – domyślny port MySQL jest często zajęty przez XAMPP,
+MySQL Workbench albo inny lokalny serwis. Mapowanie `3307:3306` sprawia, że
+kontener nie wchodzi w konflikt z niczym, co już chodzi na maszynie.
+
+**Healthcheck i `--wait`** – to nie jest ozdoba. FXServer wystartowany zanim
+baza będzie gotowa wstaje bez błędu, ale nie wczytuje graczy: postacie znikają,
+garaże są puste, konta bankowe wyzerowane. Dlatego `start-server.bat` czeka na
+zdrowy kontener i **przerywa start**, jeśli baza nie wstała – lepiej nie
+uruchomić serwera, niż uruchomić go w stanie, który wygląda na działający
+i po cichu gubi dane.
+
+### Kolejność w `start-server.bat`
+
+```
+baza → generator pojazdów → FXServer
+```
+
+Każdy krok ma warunek wyjścia. Generator (`generate_vehicle_resources.py`)
+musi pójść przed serwerem, bo przepisuje listę aut do trzech miejsc naraz:
+`vehicles.cfg`, `vMenu/config/addons.json` i sekcji AUTO-GENERATED
+w `qb-core/shared/vehicles.lua`. Utrzymywanie tych trzech list ręcznie
+kończy się tym, że auto istnieje w jednym miejscu, a w drugim nie – i albo
+nie da się go kupić, albo spawnuje się bez nazwy. Jedno źródło prawdy
+(katalog `[addon]`) i skrypt, który rozsyła je dalej.
+
+### txAdmin
+
+FXServer odpalany jest z profilem `default` przez txAdmin, a nie surowo.
+Powody są praktyczne: restart pojedynczego zasobu bez ubijania całego serwera
+(kluczowe przy pracy nad handlingiem, gdzie zmiana testuje się co kilka minut),
+zbiorcze logi, panel do banów i whitelisty, oraz automatyczne restarty.
+
+### QBCore, nie ESX
+
+Stack jest w całości **QBCore** (`txData/projectterrific.cfg`). ESX
+i `lachee-garage` z `docs/PLAN.md` są wyłączone – zostały po wcześniejszym
+kierunku projektu. Mieszanie dwóch frameworków oznacza dwa równoległe systemy
+postaci, pieniędzy i inwentarza, więc wybrany został jeden.
+
+### Narzędzia w Pythonie
+
+Tekstury i handling ogarnia się skryptami z `tools/`, a nie ręcznie w OpenIV.
+Przy ~180 zasobach pojazdów ręczna robota jest niewykonalna i niepowtarzalna –
+nie da się potem odpowiedzieć na pytanie „co dokładnie zmieniłem w tym aucie".
+Stąd Python (`numpy` do operacji na bitmapach) i trzy zasady wspólne dla
+wszystkich skryptów:
+
+- domyślnie **dry run** – skrypt pokazuje, co by zrobił, i nic nie zapisuje,
+- zapis dopiero z `--apply`, zawsze z kopią w `backups/`,
+- wynik jest **idempotentny** – drugie uruchomienie na tym samym pliku nie
+  psuje pierwszego.
+
+`ytd_optimize.py` ma własny parser formatu RSC7, bo żadne gotowe narzędzie nie
+robi wsadowego downscale'u tekstur z zachowaniem struktury `.ytd`.
+
+---
+
 ## Narzędzia (`tools/`, Python 3 + numpy)
 
 | skrypt | do czego |
@@ -112,9 +187,17 @@ z czasów, gdy były one podmodułami.
 ## Czego nie ma w repo
 
 Modele i tekstury pojazdów (`.yft`, `.ydr`, `.ytd`, `.dds`, `.rpf`) — ponad
-4 GB, przekraczają limity GitHuba. Poza gitem są też `txData/cache/`,
-`artifact/`, `backups/`, `txData/secrets.cfg` i `txData/admins.json`
-(hash hasła admina txAdmin).
+4 GB, przekraczają limity GitHuba. Nawet gdyby się mieściły, nie ma sensu ich
+wersjonować: każda zmiana binarki to nowa kopia całego pliku w historii, a i tak
+nie da się zobaczyć diffa. Repo trzyma **konfigurację, kod i dokumentację** –
+czyli to, co faktycznie edytuję; modele kopiowane są osobno.
+
+Poza gitem są też `txData/cache/`,
+`artifact/` (pobierany build FXServera), `backups/` (kopie robione przez
+`tools/`) oraz – z powodów bezpieczeństwa – `txData/secrets.cfg`
+(klucz licencyjny, połączenie do bazy) i `txData/admins.json`
+(hash hasła admina txAdmin). Dzięki temu repo może być publiczne bez
+wycieknięcia dostępów.
 
 Zasoby z `txData/resources/[local]/` (`jg-vehicleindicators`, `lachee-garage`,
 `ts_esx-CarKeys`) były kiedyś podmodułami git – repo trzymało tylko wskaźnik na
