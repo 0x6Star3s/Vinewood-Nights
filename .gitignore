@@ -34,3 +34,6 @@ ytd_report.json
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# ---- Cache Pythona (generator pojazdow) ----
+__pycache__/

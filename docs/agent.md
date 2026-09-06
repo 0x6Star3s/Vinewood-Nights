@@ -8,7 +8,7 @@ The server appears to be a mostly default CFX/FiveM recipe with additional resou
 
 ## Important Paths
 
-- `start_8158_default.bat` starts FXServer with the `default` txAdmin profile.
+- `start-server.bat` starts FXServer with the `default` txAdmin profile.
 - `artifact/` contains the downloaded FXServer artifact and bundled Cfx.re system resources. It was updated to the official `LATEST RECOMMENDED` Windows artifact build `25770`.
 - `txData/server.cfg` is the main server configuration and resource startup list.
 - `txData/default/config.json` is the txAdmin profile configuration.
@@ -29,7 +29,7 @@ The server appears to be a mostly default CFX/FiveM recipe with additional resou
 The visible startup command is:
 
 ```bat
-start_8158_default.bat
+start-server.bat
 ```
 
 That batch file launches `FXServer.exe` with:

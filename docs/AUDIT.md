@@ -32,7 +32,7 @@ Status napraw: [x] = zrobione, [~] = czesciowo (opis przy pozycji), brak = do zr
    Fix: `if ped then` + budować listę dopiero na żądanie (callback), nie w pętli.
 
 6. [x] ZROBIONE 2026-09-02 (docker compose up -d --wait + przerwanie startu gdy baza nie wstanie) - [LOG][KOD] **Baza startuje po serwerze**: log `connect ECONNREFUSED 127.0.0.1:3307`, `Connection to database timed out` x3, hitch 901 ms. Kontener `local4word6-projectterrific-db` (docker-compose, port 3307) nie był uruchomiony przy starcie FXServer; gracze nie mogą się załadować.
-   Fix: w `start_8158_default.bat` przed FXServer: `docker compose up -d --wait`.
+   Fix: w `start-server.bat` przed FXServer: `docker compose up -d --wait`.
 
 7. [x] ZROBIONE 2026-09-02 (cdn-fuel -> qb-target, qb-drugs przepisany, qb-platescan Config.OxTarget=false; ox_target nie startuje) - [LOG][KOD] **Dwa systemy targetu naraz**: `[standalone]/cdn-fuel/fxmanifest.lua:40-50` deklaruje `dependency 'ox_target'`, więc FXServer auto-startuje ox_target (log: "Started resource ox_target"), a cały stack używa qb-target (`setr UseTarget true`). Oba na LEFT ALT (`qb-target/init.lua:57`, `ox_target/client/main.lua:303`). `[qb]/qb-drugs/client/cornerselling.lua:55-268` też ma na sztywno `exports.ox_target`.
    Skutek: podwójne "oko", podwójny raycast, konflikt klawisza.
