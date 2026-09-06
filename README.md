@@ -1,5 +1,7 @@
 # Vinewood Nights
 
+[Polski](#o-serwerze) · [English](#about-the-server) · [Dokumentacja techniczna](#szybki-start)
+
 ## O serwerze
 
 **Vinewood Nights** to serwer roleplay zbudowany wokół jednej rzeczy – motoryzacji.
