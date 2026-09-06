@@ -1,5 +1,26 @@
 # Vinewood Nights
 
+## O serwerze
+
+Serwer roleplay w GTA V, w którym wszystko kręci się wokół samochodów.
+
+Czego możesz się spodziewać:
+
+- **Auta jedżą jak naprawdę** – fizyka każdego pojazdu liczona z jego
+  rzeczywistej masy, mocy, napędu i przełożeń. SUV kołysze się na zakrętach,
+  tylnonapędowe ucieka tyłem, hipersamochód trzeba umieć opanować.
+- **Płynna gra** – tekstury każdego auta są kontrolowane i przycinane, więc
+  serwer nie klatkuje i nie wywala gry przy dużej liście pojazdów.
+- **Życie wokół auta** – garaże pamiętające, gdzie i w jakim stanie zostawiłeś
+  wóz, kluczyki, które można zgubić albo komuś ukraść, mechanik-gracz, laweta,
+  tuning realnie zmieniający prowadzenie, bank i konto.
+- **Po polsku** – menu i komunikaty w języku polskim, w stylu gry, bez
+  czatowych komend.
+
+Dla graczy, którzy w GTA lubią przede wszystkim jeździć.
+
+---
+
 Lokalny serwer FiveM (FXServer) na QBCore, uruchamiany przez txAdmin, z bazą
 MariaDB w Dockerze. Repo trzyma konfigurację, zasoby (bez ciężkich modeli),
 narzędzia do pojazdów i dokumentację/audyty.
