@@ -10,12 +10,12 @@ tym, o czym się rozmawia, na co się pracuje, czym się ściga, co się traci.
 Całe otoczenie – garaże, warsztaty, lawety, ludzie i pieniądze – jest ułożone
 tak, żeby to wspierać.
 
-Postawiliśmy na immersję zamiast na długość listy pojazdów. Każde auto ma
-policzone parametry na podstawie swoich rzeczywistych danych – masy, mocy,
-napędu, przełożeń – więc jedzie tak, jak powinno jechać, a nie tak, jak
-ktoś ustawił na oko. Poczujesz różnicę między przednim a tylnym napędem,
-między ciężkim SUV-em a lekkim coupe, między autem, które wybacza błędy,
-a takim, które trzeba umieć opanować.
+Immersja jest tu ważniejsza niż długość listy pojazdów. Prowadzenie zostaje
+gta‑owe – czytelne i przyjemne od pierwszego zakrętu – ale parametry każdego
+auta są wzorowane na jego rzeczywistym odpowiedniku: masie, mocy, napędzie,
+przełożeniach. Dzięki temu wozy różnią się między sobą tak, jak różnią się
+naprawdę. Poczujesz, kiedy siadasz w ciężki SUV, a kiedy w lekkie coupe;
+które auto wybacza błędy, a które trzeba umieć opanować.
 
 Ta sama zasada dotyczy optymalizacji. Każdy pojazd przechodzi przez kontrolę
 tekstur i modeli, zanim trafi na serwer – bo płynna gra jest częścią immersji.
