@@ -1,6 +1,10 @@
 # Vinewood Nights
 
-[Polski](#o-serwerze) · [English](#about-the-server) · [Dokumentacja techniczna](#szybki-start)
+<p align="center">
+  <a href="#o-serwerze">Polski</a> ·
+  <a href="#about-the-server">English</a> ·
+  <a href="#szybki-start">Dokumentacja techniczna</a>
+</p>
 
 ## O serwerze
 
