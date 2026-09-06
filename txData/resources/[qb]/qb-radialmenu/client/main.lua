@@ -92,6 +92,9 @@ local function SetupVehicleMenu()
     if Vehicle ~= 0 then
         VehicleMenu.items[#VehicleMenu.items+1] = Config.VehicleDoors
         if Config.EnableExtraMenu then VehicleMenu.items[#VehicleMenu.items+1] = Config.VehicleExtras end
+        if GetPedInVehicleSeat(Vehicle, -1) == ped then
+            VehicleMenu.items[#VehicleMenu.items+1] = Config.TractionControl
+        end
 
         if not IsVehicleOnAllWheels(Vehicle) then
             VehicleMenu.items[#VehicleMenu.items+1] = {

@@ -16,51 +16,27 @@ local blipsZonesLoaded = false
 local storingVehicle = false
 local parkingInProgress = false
 
--- ===== 3D podgląd pojazdu na obrotnicy (zanim wyciągniesz auto z garażu) =====
--- Local, nie-sieciowy pojazd + skryptowa kamera. Auto się obraca, strzałki
--- lewo/prawo przełączają podglądany pojazd z aktualnej listy garażu.
+-- ===== 3D podgląd pojazdu (zanim wyciągniesz auto z garażu) =====
+-- Lokalne, nie-sieciowe auto na punkcie spawnu + to samo menu (ScaleformUI) i ta sama
+-- kamera (DragCam z terrific-customs) co w warsztacie: LPM obraca, scroll przybliża,
+-- spacja = drzwi, V = widok z kabiny. Góra/dół na liście przełącza podglądane auto.
 local previewActive = false
 local previewVehicle = nil
-local previewCam = nil
 local previewList = {}
 local previewIndex = 1
+-- Rośnie przy każdej zmianie auta i przy zamknięciu podglądu. Wywołanie, które czekało
+-- na załadowanie modelu, sprawdza go i nie tworzy auta, gdy ktoś nowszy je wyprzedził -
+-- inaczej szybkie przewijanie listy stawiało kilka aut w jednym punkcie.
+local previewGen = 0
 local garageMenuContext = nil
-local previewFreeCam = false
-local isAdminCached = false
-local freeCamMenuClosedByUs = false
-local pendingCamPoint = nil
+local garageMenu = nil
 local OpenGarageVehicleMenu -- forward declaration, definiowana niżej w pliku
 
-local function DrawPreviewText(text)
-    SetTextFont(4)
-    SetTextScale(0.40, 0.40)
-    SetTextColour(255, 255, 255, 235)
-    SetTextDropshadow(0, 0, 0, 0, 255)
-    SetTextOutline()
-    SetTextCentre(true)
-    BeginTextCommandDisplayText("STRING")
-    AddTextComponentSubstringPlayerName(text)
-    EndTextCommandDisplayText(0.5, 0.90)
-end
-
--- Podpowiedź w rogu ekranu dla admina - ustawianie kąta kamery podglądu 3D
-local function DrawCornerText(text)
-    SetTextFont(4)
-    SetTextScale(0.30, 0.30)
-    SetTextColour(255, 255, 255, 220)
-    SetTextDropshadow(0, 0, 0, 0, 255)
-    SetTextOutline()
-    SetTextCentre(false)
-    BeginTextCommandDisplayText("STRING")
-    AddTextComponentSubstringPlayerName(text)
-    EndTextCommandDisplayText(0.015, 0.04)
-end
-
-local function RefreshAdminStatus()
-    QBCore.Functions.TriggerCallback('qb-garages:server:isGarageAdmin', function(result)
-        isAdminCached = result and true or false
-    end)
-end
+CreateThread(function()
+    if Config.MenuStyle.bannerDict ~= "" then
+        RequestStreamedTextureDict(Config.MenuStyle.bannerDict, false)
+    end
+end)
 
 local function PreviewSpawnPoint()
     local g = currentGarage or (garageMenuContext and garageMenuContext.garage)
@@ -104,60 +80,9 @@ local function ApplyPreviewMods(veh, data)
     end
 end
 
-local function PreviewCamTarget(sp)
-    return sp.x, sp.y, sp.z + (Config.VehiclePreview.camFocal or 0.9)
-end
-
-local function PreviewOffsetFromHeading(headingDeg, offsetDeg, distance)
-    local rad = math.rad(headingDeg + offsetDeg)
-    return -math.sin(rad) * distance, math.cos(rad) * distance
-end
-
-local function IsPreviewCamClear(cx, cy, cz, tx, ty, tz, ignoreEntity)
-    local handle = StartShapeTestRay(cx, cy, cz, tx, ty, tz, 17, ignoreEntity or 0, 7)
-    local retval, hit, _, _, entityHit = GetShapeTestResult(handle)
-    local deadline = GetGameTimer() + 50
-    while retval == 1 and GetGameTimer() < deadline do
-        Wait(0)
-        retval, hit, _, _, entityHit = GetShapeTestResult(handle)
-    end
-    if not hit then return true end
-    if ignoreEntity and entityHit == ignoreEntity then return true end
-    return false
-end
-
-local function CurrentPreviewGarage()
-    local index = (garageMenuContext and garageMenuContext.index) or currentGarageIndex
-    local garage = (garageMenuContext and garageMenuContext.garage) or currentGarage
-    return index, garage
-end
-
-local function ResolvePreviewCamera(sp, veh, garage)
-    if garage and garage.previewCamPoint then
-        local c = garage.previewCamPoint
-        return c.x, c.y, c.z
-    end
-
-    local p = Config.VehiclePreview
-    local dist = p.camDistance or 7.0
-    local height = p.camHeight or 1.7
-    local tx, ty, tz = PreviewCamTarget(sp)
-    local heading = sp.h or 0.0
-    local offsets = p.camAngleOffsets or { 135.0, -135.0, 90.0, -90.0, 45.0, -45.0, 180.0, 0.0 }
-
-    for _, off in ipairs(offsets) do
-        local ox, oy = PreviewOffsetFromHeading(heading, off, dist)
-        local cx, cy, cz = sp.x + ox, sp.y + oy, sp.z + height
-        if IsPreviewCamClear(cx, cy, cz, tx, ty, tz, veh) then
-            return cx, cy, cz
-        end
-    end
-
-    local ox, oy = PreviewOffsetFromHeading(heading, 135.0, dist + 4.0)
-    return sp.x + ox, sp.y + oy, sp.z + height + 2.0
-end
-
 local function ShowPreviewVehicleImpl()
+    previewGen = previewGen + 1
+    local gen = previewGen
     DeletePreviewVehicle()
     if not Config.VehiclePreview.enabled then return end
     local sp = PreviewSpawnPoint()
@@ -172,11 +97,14 @@ local function ShowPreviewVehicleImpl()
     end
 
     local hash = LoadPreviewModel(data.vehicle)
+    -- w czasie ładowania modelu gracz mógł przewinąć dalej albo zamknąć menu
+    if gen ~= previewGen then return end
     if not hash then
         print("^1[qb-garages]^7 ShowPreviewVehicle: nie udało się załadować modelu " .. tostring(data.vehicle))
         return
     end
 
+    DeletePreviewVehicle()
     previewVehicle = CreateVehicle(hash, sp.x, sp.y, sp.z, sp.h, false, false)
     SetModelAsNoLongerNeeded(hash)
     if not DoesEntityExist(previewVehicle) then previewVehicle = nil return end
@@ -191,24 +119,11 @@ local function ShowPreviewVehicleImpl()
         SetVehicleNumberPlateText(previewVehicle, QBCore.Shared.Trim(data.plate))
     end
 
-    if previewFreeCam then return end -- admin ustawia kąt ręcznie, nie nadpisuj kamery
-
-    local _, garage = CurrentPreviewGarage()
-    local p = Config.VehiclePreview
-    local tx, ty, tz = PreviewCamTarget(sp)
-    local cx, cy, cz = ResolvePreviewCamera(sp, previewVehicle, garage)
-
-    -- Kamera jest tylko PRZESTAWIANA (nigdy niszczona/tworzona od nowa), jeśli już
-    -- istnieje - unika to migotania/przejścia do widoku gracza między odświeżeniami
-    -- (np. po zapisaniu kąta podglądu albo zmianie pojazdu na liście).
-    if not previewCam or not DoesCamExist(previewCam) then
-        previewCam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
-        SetCamFov(previewCam, p.camFov or 45.0)
-        SetCamActive(previewCam, true)
-        RenderScriptCams(true, true, 0, true, true)
+    -- Pierwsze auto startuje kamerę, kolejne tylko podmieniają cel - kąt i zoom zostają,
+    -- więc przewijanie listy nie szarpie widokiem.
+    if not DragCam.setEntity(previewVehicle) then
+        DragCam.start(previewVehicle, Config.VehiclePreview.camera)
     end
-    SetCamCoord(previewCam, cx, cy, cz)
-    PointCamAtCoord(previewCam, tx, ty, tz)
 end
 
 local function ShowPreviewVehicle()
@@ -218,231 +133,14 @@ local function ShowPreviewVehicle()
     end
 end
 
--- Tryb "orbita kamery wokół auta" - tylko dla admina, tylko podczas podglądu.
--- Postać zostaje dokładnie tam gdzie jest (zamrożona/niewidoczna jak w normalnym
--- podglądzie) - obraca się wyłącznie kamera, sterowana myszką (obrót) i scrollem
--- (zoom), zawsze skierowana na samochód. Menu qb-menu trzyma pełny focus myszy,
--- więc trzeba je na chwilę zamknąć, żeby mysz sterowała kamerą, a nie kursorem NUI.
-local orbitYaw = 0.0
-local orbitPitch = 15.0
-local orbitDistance = 7.0
-
-local function InitOrbitAngles(sp, garage)
-    local heading = sp.h or 0.0
-    local tx, ty, tz = PreviewCamTarget(sp)
-
-    if garage and garage.previewCamPoint then
-        local c = garage.previewCamPoint
-        local dx, dy, dz = c.x - tx, c.y - ty, c.z - tz
-        local horiz = math.sqrt(dx * dx + dy * dy)
-        orbitYaw = math.deg(math.atan(-dx, dy)) % 360.0
-        orbitPitch = math.deg(math.atan(dz, horiz))
-        orbitDistance = math.max(1.5, math.sqrt(horiz * horiz + dz * dz))
-    else
-        local p = Config.VehiclePreview
-        local dist = p.camDistance or 7.0
-        local dz = (p.camHeight or 1.7) - (p.camFocal or 0.9)
-        orbitYaw = (heading + 135.0) % 360.0
-        orbitPitch = math.deg(math.atan(dz, dist))
-        orbitDistance = math.sqrt(dist * dist + dz * dz)
-    end
-end
-
--- Bazowe czułości obrotu (stopnie na jednostkę delty myszy) - przemnażane przez
--- Config.VehiclePreview.orbitSensitivity, żeby dało się to dostroić bez edycji kodu.
-local ORBIT_YAW_BASE = 200.0
-local ORBIT_PITCH_BASE = 120.0
-
-local function UpdateOrbitCam()
-    if not previewCam or not DoesCamExist(previewCam) then return end
-    local sp = PreviewSpawnPoint()
-    if not sp then return end
-
-    local p = Config.VehiclePreview
-    local sensitivity = p.orbitSensitivity or 0.35
-    local zoomStep = p.orbitZoomStep or 0.6
-    local minDist = p.orbitMinDistance or 1.2
-    local maxDist = p.orbitMaxDistance or 25.0
-
-    DisableControlAction(0, 1, true)  -- LookLeftRight (mysz X)
-    DisableControlAction(0, 2, true)  -- LookUpDown (mysz Y)
-    DisableControlAction(0, 15, true) -- scroll w górę
-    DisableControlAction(0, 16, true) -- scroll w dół
-
-    local mx = GetDisabledControlNormal(0, 1)
-    local my = GetDisabledControlNormal(0, 2)
-    orbitYaw = (orbitYaw - mx * ORBIT_YAW_BASE * sensitivity) % 360.0
-    orbitPitch = math.max(-80.0, math.min(85.0, orbitPitch - my * ORBIT_PITCH_BASE * sensitivity))
-
-    if IsDisabledControlJustPressed(0, 16) then
-        orbitDistance = math.max(minDist, orbitDistance - zoomStep)
-    end
-    if IsDisabledControlJustPressed(0, 15) then
-        orbitDistance = math.min(maxDist, orbitDistance + zoomStep)
-    end
-
-    local tx, ty, tz = PreviewCamTarget(sp)
-    local rad = math.rad(orbitYaw)
-    local pitchRad = math.rad(orbitPitch)
-    local horiz = orbitDistance * math.cos(pitchRad)
-    local cx = tx - math.sin(rad) * horiz
-    local cy = ty + math.cos(rad) * horiz
-    local cz = tz + orbitDistance * math.sin(pitchRad)
-
-    SetCamCoord(previewCam, cx, cy, cz)
-    PointCamAtCoord(previewCam, tx, ty, tz)
-end
-
-local function ExitFreeCamState()
-    previewFreeCam = false
-    freeCamMenuClosedByUs = false
-    pendingCamPoint = nil
-    -- Dokończenie w osobnym wątku: to bywa wywoływane z callbacku NUI (klik w menu),
-    -- gdzie nie wolno "czekać" (Wait) - ShowPreviewVehicle może czekać na model auta.
-    -- Robimy to tutaj też defensywnie przywracając zamrożenie/niewidzialność postaci,
-    -- na wypadek gdyby coś w trakcie ustawiania kąta ją zwolniło.
-    CreateThread(function()
-        local ped = PlayerPedId()
-        FreezeEntityPosition(ped, true)
-        SetEntityVisible(ped, false)
-        ShowPreviewVehicle()
-        if garageMenuContext then
-            OpenGarageVehicleMenu()
-        end
-    end)
-end
-
-local function EnterFreeCamState()
-    if not previewActive then
-        QBCore.Functions.Notify("Otwórz najpierw listę pojazdów w garażu (wyciągnij auto).", "error", 4000)
-        return
-    end
-    if not isAdminCached then
-        QBCore.Functions.Notify("Brak uprawnień administratora do ustawiania kąta podglądu.", "error", 4000)
-        return
-    end
-    if previewFreeCam then return end
-    if not previewCam or not DoesCamExist(previewCam) then
-        QBCore.Functions.Notify("Kamera podglądu nie jest jeszcze gotowa, spróbuj ponownie za chwilę.", "error", 4000)
-        return
-    end
-
-    local sp = PreviewSpawnPoint()
-    if not sp then return end
-    local _, garage = CurrentPreviewGarage()
-    InitOrbitAngles(sp, garage)
-
-    previewFreeCam = true
-    if garageMenuContext then
-        freeCamMenuClosedByUs = true
-        TriggerEvent("qb-menu:closeMenu")
-    end
-    QBCore.Functions.Notify("Obracaj kamerą (myszka) i przybliżaj/oddalaj (scroll). F7 = zapisz kąt.", "primary", 6000)
-end
-
--- F6 jako skrót klawiszowy: włącza/wyłącza (bez zapisu)
-local function TogglePreviewFreeCam()
-    if previewFreeCam then
-        ExitFreeCamState()
-        QBCore.Functions.Notify("Ustawianie kąta anulowane (bez zapisu).", "primary", 3000)
-    else
-        EnterFreeCamState()
-    end
-end
-
-RegisterNetEvent('qb-garages:client:confirmSaveCameraAngle', function()
-    local index, garage = CurrentPreviewGarage()
-    if index and garage and pendingCamPoint then
-        garage.previewCamPoint = vector3(pendingCamPoint.x, pendingCamPoint.y, pendingCamPoint.z) -- natychmiastowy podgląd
-        TriggerServerEvent('qb-garages:server:savePreviewCamPoint', index, pendingCamPoint)
-        QBCore.Functions.Notify("Zapisano kąt podglądu dla tego garażu.", "success", 3500)
-    else
-        QBCore.Functions.Notify("Nie udało się zapisać - spróbuj ponownie.", "error", 4000)
-    end
-    ExitFreeCamState()
-end)
-
-RegisterNetEvent('qb-garages:client:resumeFreeCam', function()
-    pendingCamPoint = nil
-    freeCamMenuClosedByUs = true
-    TriggerEvent("qb-menu:closeMenu") -- ukryj menu potwierdzenia, oddaj mysz kamerze (freecam trwa dalej)
-end)
-
-RegisterNetEvent('qb-garages:client:cancelFreeCam', function()
-    ExitFreeCamState()
-    QBCore.Functions.Notify("Anulowano ustawianie kąta.", "primary", 3000)
-end)
-
--- F7: otwórz menu z potwierdzeniem zapisu (nie zapisuje od razu)
-local function SavePreviewCamAngle()
-    if not previewActive or not isAdminCached then return end
-    if not previewFreeCam then
-        QBCore.Functions.Notify("Najpierw włącz wolną kamerę (przycisk w menu albo F6).", "error", 4000)
-        return
-    end
-    local index, garage = CurrentPreviewGarage()
-    if not index or not garage then
-        QBCore.Functions.Notify("Brak aktywnego garażu do zapisu.", "error", 4000)
-        return
-    end
-
-    if not previewCam or not DoesCamExist(previewCam) then
-        QBCore.Functions.Notify("Kamera podglądu nie istnieje.", "error", 4000)
-        return
-    end
-    local camCoord = GetCamCoord(previewCam)
-    pendingCamPoint = { x = camCoord.x, y = camCoord.y, z = camCoord.z }
-
-    exports['qb-menu']:openMenu({
-        { header = "Zapisać ten kąt podglądu?", isMenuHeader = true },
-        {
-            header = "💾 Zapisz ten kąt",
-            txt = ("Ustawi podgląd 3D dla: %s"):format(garage.label or tostring(index)),
-            color = "success",
-            params = { event = "qb-garages:client:confirmSaveCameraAngle" }
-        },
-        {
-            header = "↩️ Wróć i popraw kąt",
-            txt = "Kontynuuj ustawianie wolnej kamery.",
-            params = { event = "qb-garages:client:resumeFreeCam" }
-        },
-        {
-            header = "❌ Anuluj",
-            txt = "Wróć do normalnego podglądu bez zapisywania.",
-            color = "danger",
-            params = { event = "qb-garages:client:cancelFreeCam" }
-        },
-    })
-end
-
--- Przycisk w menu garażu (nad listą pojazdów), widoczny tylko dla admina
-RegisterNetEvent('qb-garages:client:adminStartCameraPick', function()
-    EnterFreeCamState()
-end)
-
-local function CyclePreview(dir)
-    if #previewList == 0 then return end
-    previewIndex = previewIndex + dir
-    if previewIndex < 1 then previewIndex = #previewList end
-    if previewIndex > #previewList then previewIndex = 1 end
-    ShowPreviewVehicle()
-    if garageMenuContext then
-        OpenGarageVehicleMenu()
-    end
-end
-
 local function StopPreview()
+    previewGen = previewGen + 1 -- unieważnia wywołania, które jeszcze czekają na model
     previewActive = false
-    previewFreeCam = false
     previewList = {}
     previewIndex = 1
     garageMenuContext = nil
     DeletePreviewVehicle()
-    if previewCam and DoesCamExist(previewCam) then
-        DestroyCam(previewCam)
-    end
-    previewCam = nil
-    RenderScriptCams(false, true, 200, true, true)
+    DragCam.stop()
     local ped = PlayerPedId()
     FreezeEntityPosition(ped, false)
     SetEntityVisible(ped, true)
@@ -453,60 +151,11 @@ local function StartPreview(list)
     previewList = list or {}
     previewIndex = 1
     previewActive = (#previewList > 0)
-    previewFreeCam = false
     local ped = PlayerPedId()
     FreezeEntityPosition(ped, true)
     SetEntityVisible(ped, false)
     ShowPreviewVehicle()
 end
-
-RegisterCommand('garagepreview_freecam', function() TogglePreviewFreeCam() end, false)
-RegisterCommand('garagepreview_saveangle', function() SavePreviewCamAngle() end, false)
-RegisterKeyMapping('garagepreview_freecam', 'Podgląd garażu: włącz/wyłącz wolną kamerę (admin)', 'keyboard', 'F6')
-RegisterKeyMapping('garagepreview_saveangle', 'Podgląd garażu: zapisz obecny kąt kamery (admin)', 'keyboard', 'F7')
-
-local adminHintVisible = true
-RegisterCommand('garagepreview_togglehint', function()
-    if not isAdminCached then return end
-    adminHintVisible = not adminHintVisible
-end, false)
-RegisterKeyMapping('garagepreview_togglehint', 'Podgląd garażu: pokaż/ukryj plakietkę admina', 'keyboard', 'F8')
-
-CreateThread(function()
-    local LEFT, RIGHT = 174, 175
-    while true do
-        if previewActive then
-            local p = Config.VehiclePreview
-            if previewFreeCam then
-                UpdateOrbitCam()
-            end
-            if previewVehicle and DoesEntityExist(previewVehicle) and not previewFreeCam then
-                local h = (GetEntityHeading(previewVehicle) + (p.spinSpeed or 10.0) * GetFrameTime()) % 360.0
-                SetEntityHeading(previewVehicle, h)
-            end
-            if p.cycleLeftRight and not previewFreeCam then
-                if IsControlJustPressed(0, LEFT) then CyclePreview(-1) end
-                if IsControlJustPressed(0, RIGHT) then CyclePreview(1) end
-            end
-            if isAdminCached and adminHintVisible then
-                if previewFreeCam then
-                    DrawCornerText("~y~Ustawianie kąta podglądu~s~~n~Mysz = obrót kamery wokół auta~n~Scroll = przybliż/oddal~n~~g~F7~s~ - otwórz zapis~n~~r~F6~s~ - anuluj, wróć do listy~n~~s~F8~s~ - ukryj tę plakietkę")
-                else
-                    DrawCornerText("~s~🛡️ ADMIN~s~~n~Masz tu funkcje pomocnicze (menu garażu)~n~~s~F8~s~ - ukryj")
-                end
-            end
-            local data = previewList[previewIndex]
-            if data and not previewFreeCam then
-                local vd = QBCore.Shared.Vehicles[data.vehicle]
-                local name = (vd and vd.name) or data.vehicle or "?"
-                DrawPreviewText(("~b~%s~s~   %s    ~y~Wybierz pojazd z listy~s~   ~g~Potwierdź na dole~s~"):format(name, data.plate or ""))
-            end
-            Wait(0)
-        else
-            Wait(300)
-        end
-    end
-end)
 -- ===== koniec podglądu 3D =====
 
 local function GetGarageFuel(vehicle)
@@ -563,45 +212,13 @@ end
 
 
 --Menus
+-- Jeden krok zamiast dwóch: E przy garażu od razu otwiera listę aut.
 local function MenuGarage(type, garage, indexgarage)
-    local header
-    local leave
-    if type == "house" then
-        header = Lang:t("menu.header." .. type .. "_car", { value = garage.label })
-        leave = Lang:t("menu.leave.car")
-    else
-        header = Lang:t("menu.header." .. type .. "_" .. garage.vehicle, { value = garage.label })
-        leave = Lang:t("menu.leave." .. garage.vehicle)
-    end
-
+    -- ScaleformUI nie zabiera klawiatury jak NUI, więc E w trakcie podglądu doszłoby tutaj
+    -- i otworzyło drugie menu na pierwszym
+    if garageMenu or previewActive then return end
     exports['qb-core']:HideText()
-
-    exports['qb-menu']:openMenu({
-        {
-            header = header,
-            isMenuHeader = true
-        },
-        {
-            header = Lang:t("menu.header.vehicles"),
-            txt = Lang:t("menu.text.vehicles"),
-            params = {
-                event = "qb-garages:client:VehicleList",
-                args = {
-                    type = type,
-                    garage = garage,
-                    index = indexgarage,
-                }
-            }
-        },
-        {
-            header = leave,
-            txt = "",
-            color = "danger",
-            params = {
-                event = "qb-garages:client:closeGarageMenu",
-            }
-        },
-    })
+    TriggerEvent("qb-garages:client:VehicleList", { type = type, garage = garage, index = indexgarage })
 end
 
 local function RefreshGarageHints(garage)
@@ -646,7 +263,10 @@ end
 
 local function ClearMenu()
     StopPreview()
-    TriggerEvent("qb-menu:closeMenu")
+    if garageMenu then
+        garageMenu = nil
+        MenuHandler:CloseAndClearHistory()
+    end
 end
 
 local function closeMenuFull()
@@ -660,19 +280,6 @@ RegisterNetEvent('qb-garages:client:closeGarageMenu', function()
         RefreshGarageHints(currentGarage)
     end
 end)
-
--- qb-menu zamyka NUI (ESC / X / przycisk wyjścia) -> wyłącz podgląd 3D.
--- Wyjątek: gdy TO MY sami zamknęliśmy menu na czas trybu wolnej kamery (F6),
--- podgląd ma zostać aktywny - menu wraca po F6/F7 (patrz ExitFreeCamState).
-AddEventHandler("qb-menu:client:menuClosed", function()
-    if freeCamMenuClosedByUs then
-        freeCamMenuClosedByUs = false
-        return
-    end
-    if previewActive then StopPreview() end
-    if currentGarage then RefreshGarageHints(currentGarage) end
-end)
-
 local function DestroyZone(type, index)
     if garageZones[type .. "_" .. index] then
         garageZones[type .. "_" .. index].zonecombo:destroy()
@@ -808,19 +415,20 @@ local function doCarDamage(currentVehicle, veh)
     local body = veh.body + 0.0
 
     if Config.VisuallyDamageCars then
-        local data = json.decode(veh.mods)
+        -- mods bywa '{}' (auto tuż po zakupie albo od admina) - wtedy nie ma czego odtwarzać
+        local data = json.decode(veh.mods or '{}') or {}
 
-        for k, v in pairs(data.doorStatus) do
+        for k, v in pairs(data.doorStatus or {}) do
             if v then
                 SetVehicleDoorBroken(currentVehicle, tonumber(k), true)
             end
         end
-        for k, v in pairs(data.tireBurstState) do
+        for k, v in pairs(data.tireBurstState or {}) do
             if v then
                 SetVehicleTyreBurst(currentVehicle, tonumber(k), true)
             end
         end
-        for k, v in pairs(data.windowStatus) do
+        for k, v in pairs(data.windowStatus or {}) do
             if not v then
                 SmashVehicleWindow(currentVehicle, tonumber(k))
             end
@@ -874,138 +482,84 @@ local function round(num, numDecimalPlaces)
     return tonumber(string.format("%." .. (numDecimalPlaces or 0) .. "f", num))
 end
 
+local function VehicleLabel(v)
+    local vd = QBCore.Shared.Vehicles[v.vehicle]
+    if not vd then return v.vehicle or "?" end
+    if vd.brand and vd.brand ~= "" then return vd.brand .. " " .. vd.name end
+    return vd.name
+end
+
+local function pct(value)
+    return math.floor((tonumber(value) or 0) / 10)
+end
+
+-- Cena odzyskania: mandat z bazy, a gdy zerowy - stawka z configu.
+local function RecoverPrice(v)
+    local price = tonumber(v.depotprice) or 0
+    if price <= 0 then price = Config.Recover.fallbackPrice or 0 end
+    return price
+end
+
 function OpenGarageVehicleMenu()
     exports['qb-core']:HideText()
     local ctx = garageMenuContext
     if not ctx then return end
 
-    local MenuGarageOptions = {
-        {
-            header = ctx.header,
-            isMenuHeader = true
-        },
-    }
+    local style = Config.MenuStyle
+    local bannerColor = SColor.FromRgb(style.banner.r, style.banner.g, style.banner.b)
+    local menu = UIMenu.New(ctx.header, ctx.type == "depot" and "ODZYSKAJ POJAZD" or "WYBIERZ POJAZD", 50, 50, true, style.bannerDict, style.bannerTexture, false)
+    menu:MaxItemsOnScreen(10)
+    -- Kółko myszy zostaje kamerze (zoom), po liście chodzi się strzałkami - jak w warsztacie.
+    menu:MouseWheelControlEnabled(false)
+    menu:SetBannerColor(bannerColor)
+    menu:SubtitleColor(style.subtitle)
+    menu:CounterColor(bannerColor)
 
-    for i, v in ipairs(ctx.vehicles) do
-        local enginePercent = round(v.engine / 10, 0)
-        local bodyPercent = round(v.body / 10, 0)
-        local currentFuel = v.fuel
-        local vehicleData = QBCore.Shared.Vehicles[v.vehicle]
-        local vname = vehicleData and vehicleData.name or v.vehicle
-        local stateText = v.state
-        if type(v.state) == "number" then
-            if v.state == 0 then
-                stateText = Lang:t("status.out")
-            elseif v.state == 1 then
-                stateText = Lang:t("status.garaged")
-            elseif v.state == 2 then
-                stateText = Lang:t("status.impound")
-            end
-        end
-
-        local prefix = (i == previewIndex) and "▶ " or ""
-        local menuHeader
-        local txt
-
-        if ctx.type == "depot" and vname ~= nil then
-            menuHeader = prefix .. Lang:t('menu.header.depot', { value = vname, value2 = v.depotprice })
-            txt = Lang:t('menu.text.depot', { value = v.plate, value2 = currentFuel, value3 = enginePercent, value4 = bodyPercent })
+    for _, v in ipairs(ctx.vehicles) do
+        local item = UIMenuItem.New(VehicleLabel(v),
+            ("Tablica %s  |  Paliwo %d%%  |  Silnik %d%%  |  Karoseria %d%%"):format(
+                v.plate or "?", math.floor(tonumber(v.fuel) or 0), pct(v.engine), pct(v.body)))
+        if ctx.type == "depot" then
+            item:RightLabel(("$%d"):format(RecoverPrice(v)))
         else
-            menuHeader = prefix .. Lang:t('menu.header.garage', { value = vname, value2 = v.plate })
-            txt = Lang:t('menu.text.garage', { value = stateText, value2 = currentFuel, value3 = enginePercent, value4 = bodyPercent })
+            item:RightLabel(v.plate or "")
         end
-
-        MenuGarageOptions[#MenuGarageOptions + 1] = {
-            header = menuHeader,
-            txt = txt,
-            disabled = false,
-            params = {
-                event = "qb-garages:client:selectPreviewVehicle",
-                args = { index = i },
-                keepOpen = true,
-                navSelect = true,               -- strzałki góra/dół od razu pokazują auto
-                navActive = (i == previewIndex), -- po odświeżeniu menu zaznaczenie zostaje tu
-            }
-        }
+        menu:AddItem(item)
     end
 
-    local selected = ctx.vehicles[previewIndex]
-    local selectedName = selected and (QBCore.Shared.Vehicles[selected.vehicle] and QBCore.Shared.Vehicles[selected.vehicle].name or selected.vehicle) or "?"
-
-    if isAdminCached then
-        MenuGarageOptions[#MenuGarageOptions + 1] = {
-            header = "🎥 Ustaw kamerę podglądu",
-            txt = "[Admin] Zamknij to menu i obróć kamerę wokół auta, żeby wybrać kąt.",
-            color = "admin",
-            params = {
-                event = "qb-garages:client:adminStartCameraPick",
-            }
-        }
+    menu.OnIndexChange = function(_, index)
+        if index == previewIndex or not ctx.vehicles[index] then return end
+        previewIndex = index
+        ShowPreviewVehicle()
     end
 
-    MenuGarageOptions[#MenuGarageOptions + 1] = {
-        header = "Wyciągnij pojazd",
-        txt = ("Potwierdź wyciągnięcie: %s [%s]"):format(selectedName, selected and selected.plate or "?"),
-        color = "success",
-        params = {
-            event = "qb-garages:client:confirmTakeOutGarage",
-            args = {},
-        }
-    }
+    menu.OnItemSelect = function(_, _, index)
+        local vehicle = ctx.vehicles[index]
+        if not vehicle then return end
+        local payload = { vehicle = vehicle, type = ctx.type, garage = ctx.garage, index = ctx.index }
+        ClearMenu() -- zamyka menu i kończy podgląd, zanim auto pojawi się na spawnie
+        if ctx.type == "depot" then
+            TriggerEvent("qb-garages:client:TakeOutDepot", payload)
+        else
+            TriggerEvent("qb-garages:client:takeOutGarage", payload)
+        end
+    end
 
-    MenuGarageOptions[#MenuGarageOptions + 1] = {
-        header = ctx.leave,
-        txt = "",
-        color = "danger",
-        params = {
-            event = "qb-garages:client:closeGarageMenu",
-        }
-    }
+    -- Backspace / ESC. Visible(false) też tu trafia, StopPreview jest idempotentne.
+    menu.OnMenuClose = function()
+        garageMenu = nil
+        StopPreview()
+        if currentGarage then RefreshGarageHints(currentGarage) end
+    end
 
-    exports['qb-menu']:openMenu(MenuGarageOptions, false, false, { position = 'right' })
+    garageMenu = menu
+    menu:Visible(true)
 end
-
-RegisterNetEvent("qb-garages:client:selectPreviewVehicle", function(data)
-    if not garageMenuContext or not data or not data.index then return end
-    if not garageMenuContext.vehicles[data.index] then return end
-    previewIndex = data.index
-    ShowPreviewVehicle()
-    OpenGarageVehicleMenu()
-end)
-
-RegisterNetEvent("qb-garages:client:confirmTakeOutGarage", function()
-    local ctx = garageMenuContext
-    if not ctx then return end
-    local vehicle = ctx.vehicles[previewIndex]
-    if not vehicle then return end
-
-    local payload = {
-        vehicle = vehicle,
-        type = ctx.type,
-        garage = ctx.garage,
-        index = ctx.index,
-    }
-
-    if ctx.type == "depot" then
-        TriggerEvent("qb-garages:client:TakeOutDepot", payload)
-    else
-        TriggerEvent("qb-garages:client:takeOutGarage", payload)
-    end
-end)
 
 RegisterNetEvent("qb-garages:client:VehicleList", function(data)
     local type = data.type
     local garage = data.garage
     local indexgarage = data.index
-    local header
-    local leave
-    if type == "house" then
-        header = Lang:t("menu.header." .. type .. "_car", { value = garage.label })
-        leave = Lang:t("menu.leave.car")
-    else
-        header = Lang:t("menu.header." .. type .. "_" .. garage.vehicle, { value = garage.label })
-        leave = Lang:t("menu.leave." .. garage.vehicle)
-    end
 
     QBCore.Functions.TriggerCallback("qb-garage:server:GetGarageVehicles", function(result)
         if result == nil then
@@ -1021,19 +575,17 @@ RegisterNetEvent("qb-garages:client:VehicleList", function(data)
                 garage = garage,
                 index = indexgarage,
                 vehicles = shownVehicles,
-                header = header,
-                leave = leave,
+                header = garage.label or "Garaż",
             }
 
             currentGarage = garage
             currentGarageIndex = indexgarage
             previewIndex = 1
-            StartPreview(shownVehicles)
             OpenGarageVehicleMenu()
+            StartPreview(shownVehicles)
         end
     end, indexgarage, type, garage.vehicle)
 end)
-
 RegisterNetEvent('qb-garages:client:takeOutGarage', function(data)
     StopPreview()
     local type = data.type
@@ -1252,23 +804,18 @@ end)
 
 AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
     CreateBlipsZones()
-    RefreshAdminStatus()
 end)
 
 AddEventHandler("onResourceStart", function(res)
     if res ~= GetCurrentResourceName() then return end
     CreateBlipsZones()
-    RefreshAdminStatus()
 end)
 
--- Zabezpieczenie: gdyby ktoś zrestartował ten resource w trakcie podglądu/ustawiania
--- kamery, gracz nie może zostać zamrożony/niewidzialny na stałe.
+-- Zabezpieczenie: gdyby ktoś zrestartował ten resource w trakcie podglądu,
+-- gracz nie może zostać zamrożony/niewidzialny na stałe.
 AddEventHandler("onResourceStop", function(res)
     if res ~= GetCurrentResourceName() then return end
-    RenderScriptCams(false, true, 0, true, true)
-    local ped = PlayerPedId()
-    FreezeEntityPosition(ped, false)
-    SetEntityVisible(ped, true)
+    ClearMenu()
 end)
 
 RegisterNetEvent('QBCore:Client:OnGangUpdate', function(gang)
@@ -1283,7 +830,7 @@ RegisterNetEvent('qb-garages:client:TakeOutDepot', function(data)
     StopPreview()
     local vehicle = data.vehicle
 
-    if vehicle.depotprice ~= 0 then
+    if RecoverPrice(vehicle) > 0 then
         TriggerServerEvent("qb-garage:server:PayDepotPrice", data)
     else
         TriggerEvent("qb-garages:client:takeOutGarage", data)

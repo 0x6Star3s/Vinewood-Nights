@@ -513,7 +513,9 @@ function QBCore.Player.Save(source)
         pcoords = PlayerData and PlayerData.position or vector3(0.0, 0.0, 0.0)
     end
     if PlayerData then
-        MySQL.insert('INSERT INTO players (citizenid, cid, license, name, money, charinfo, job, gang, position, metadata) VALUES (:citizenid, :cid, :license, :name, :money, :charinfo, :job, :gang, :position, :metadata) ON DUPLICATE KEY UPDATE cid = :cid, name = :name, money = :money, charinfo = :charinfo, job = :job, gang = :gang, position = :position, metadata = :metadata', {
+        -- await + pcall: gdy baza lezy (4.09 kontener padl w trakcie gry), zapis nie ma juz
+        -- przepadac po cichu - glosny blad, info dla gracza i jedna ponowna proba po 30 s
+        local ok, err = pcall(MySQL.insert.await, 'INSERT INTO players (citizenid, cid, license, name, money, charinfo, job, gang, position, metadata) VALUES (:citizenid, :cid, :license, :name, :money, :charinfo, :job, :gang, :position, :metadata) ON DUPLICATE KEY UPDATE cid = :cid, name = :name, money = :money, charinfo = :charinfo, job = :job, gang = :gang, position = :position, metadata = :metadata', {
             citizenid = PlayerData.citizenid,
             cid = tonumber(PlayerData.cid),
             license = PlayerData.license,
@@ -525,6 +527,12 @@ function QBCore.Player.Save(source)
             position = json.encode(pcoords),
             metadata = json.encode(PlayerData.metadata)
         })
+        if not ok then
+            QBCore.ShowError(GetCurrentResourceName(), ('ZAPIS NIEUDANY: %s (%s) - %s'):format(PlayerData.name, PlayerData.citizenid, tostring(err)))
+            TriggerClientEvent('QBCore:Notify', source, 'Błąd zapisu postaci (baza danych). Zgłoś to adminowi.', 'error', 10000)
+            SetTimeout(30000, function() QBCore.Player.SaveOffline(PlayerData) end)
+            return
+        end
         if GetResourceState('qb-inventory') ~= 'missing' then exports['qb-inventory']:SaveInventory(source) end
         QBCore.ShowSuccess(GetCurrentResourceName(), PlayerData.name .. ' PLAYER SAVED!')
     else

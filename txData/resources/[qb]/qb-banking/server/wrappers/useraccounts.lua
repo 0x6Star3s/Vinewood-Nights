@@ -289,10 +289,14 @@ function generateSavings(cid)
     self.cid = cid
     self.source = -1
     local getSavingsAccount = MySQL.query.await('SELECT * FROM bank_accounts WHERE citizenid = ? AND account_type = ?', { self.cid, 'Savings' })
+    self.balance = 0
     if getSavingsAccount[1] ~= nil then
         self.aid = getSavingsAccount[1].record_id
         self.balance = getSavingsAccount[1].amount
     end
+    -- numer konta pokazywany w NUI (bylo nil -> "undefined")
+    self.account = self.cid
+    self.sortcode = self.aid or 0
     local stats = MySQL.query.await('SELECT * FROM bank_statements WHERE account = ? AND citizenid = ? ORDER BY record_id DESC LIMIT 30', { 'Savings', self.cid })
     self.bankStatement = stats
 
@@ -336,7 +340,7 @@ function generateSavings(cid)
             local time = os.date("%Y-%m-%d %H:%M:%S")
             MySQL.insert('INSERT INTO bank_statements (citizenid, account, deposited, withdraw, balance, date, type) VALUES (?, ?, ?, ?, ?, ?, ?)', {
                 self.cid,
-                'Saving',
+                'Savings',
                 amt,
                 0,
                 self.balance,
@@ -361,7 +365,7 @@ function generateSavings(cid)
                 local time = os.date("%Y-%m-%d %H:%M:%S")
                 MySQL.insert('INSERT INTO bank_statements (citizenid, account, deposited, withdraw, balance, date, type) VALUES (?, ?, ?, ?, ?, ?, ?)', {
                     self.cid,
-                    'Saving',
+                    'Savings',
                     0,
                     amt,
                     self.balance,

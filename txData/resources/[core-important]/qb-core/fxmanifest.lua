@@ -19,6 +19,7 @@ shared_scripts {
 }
 
 client_scripts {
+    '@ox_lib/init.lua', -- lib.showTextUI dla client/drawtext.lua (jedna podpowiedz E na serwerze)
     'client/main.lua',
     'client/functions.lua',
     'client/loops.lua',
@@ -46,6 +47,9 @@ files {
     'html/js/*.js'
 }
 
-dependency 'oxmysql'
+dependencies {
+    'oxmysql',
+    'ox_lib',
+}
 
 lua54 'yes'

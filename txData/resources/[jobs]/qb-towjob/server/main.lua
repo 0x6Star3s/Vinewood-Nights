@@ -5,26 +5,25 @@ local Bail = {}
 RegisterNetEvent('qb-tow:server:DoBail', function(bool, vehInfo)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    local cid = Player.PlayerData.citizenid
+
     if bool then
-        if Player.PlayerData.money.cash >= Config.BailPrice then
-            Bail[Player.PlayerData.citizenid] = Config.BailPrice
-            Player.Functions.RemoveMoney('cash', Config.BailPrice, "tow-paid-bail")
-            TriggerClientEvent('QBCore:Notify', src, Lang:t("success.paid_with_cash", {value = Config.BailPrice}), 'success')
-            TriggerClientEvent('qb-tow:client:SpawnVehicle', src, vehInfo)
-        elseif Player.PlayerData.money.bank >= Config.BailPrice then
-            Bail[Player.PlayerData.citizenid] = Config.BailPrice
-            Player.Functions.RemoveMoney('bank', Config.BailPrice, "tow-paid-bail")
-            TriggerClientEvent('QBCore:Notify', src, Lang:t("success.paid_with_bank", {value = Config.BailPrice}), 'success')
-            TriggerClientEvent('qb-tow:client:SpawnVehicle', src, vehInfo)
-        else
+        if type(vehInfo) ~= 'string' or not Config.Vehicles[vehInfo] then return end
+        local account = Player.PlayerData.money.cash >= Config.BailPrice and 'cash'
+            or (Player.PlayerData.money.bank >= Config.BailPrice and 'bank')
+        if not account then
             TriggerClientEvent('QBCore:Notify', src, Lang:t("error.no_deposit", {value = Config.BailPrice}), 'error')
+            return
         end
-    else
-        if Bail[Player.PlayerData.citizenid] ~= nil then
-            Player.Functions.AddMoney('bank', Bail[Player.PlayerData.citizenid], "tow-bail-paid")
-            Bail[Player.PlayerData.citizenid] = nil
-            TriggerClientEvent('QBCore:Notify', src, Lang:t("success.refund_to_cash", {value = Config.BailPrice}), 'success')
-        end
+        Player.Functions.RemoveMoney(account, Config.BailPrice, "tow-paid-bail")
+        Bail[cid] = account -- kaucja wraca tam, skad byla pobrana
+        TriggerClientEvent('QBCore:Notify', src, Lang:t(account == 'cash' and "success.paid_with_cash" or "success.paid_with_bank", {value = Config.BailPrice}), 'success')
+        TriggerClientEvent('qb-tow:client:SpawnVehicle', src, vehInfo)
+    elseif Bail[cid] then
+        Player.Functions.AddMoney(Bail[cid], Config.BailPrice, "tow-bail-refund")
+        Bail[cid] = nil
+        TriggerClientEvent('QBCore:Notify', src, Lang:t("success.refund", {value = Config.BailPrice}), 'success')
     end
 end)
 
@@ -66,13 +65,13 @@ RegisterNetEvent('qb-tow:server:11101110', function(drops)
 
     local bonus = 0
     local DropPrice = math.random(150, 170)
-    if drops > 20 then
+    if drops >= 20 then
         bonus = math.ceil((DropPrice / 10) * 12)
-    elseif drops > 15 then
+    elseif drops >= 15 then
         bonus = math.ceil((DropPrice / 10) * 10)
-    elseif drops > 10 then
+    elseif drops >= 10 then
         bonus = math.ceil((DropPrice / 10) * 7)
-    elseif drops > 5 then
+    elseif drops >= 5 then
         bonus = math.ceil((DropPrice / 10) * 5)
     end
     local price = (DropPrice * drops) + bonus

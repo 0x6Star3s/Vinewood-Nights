@@ -1,17 +1,17 @@
 fx_version 'cerulean'
 game 'gta5'
 
-description 'QB-Menu'
-version '1.2.0'
+description 'QB-Menu (most do ScaleformUI: menu w stylu GTA, ten sam format danych co dawniej)'
+version '2.0.0'
 
-client_script 'client/main.lua'
+client_scripts {
+    '@ScaleformUI/ScaleformUI.lua',
+    'client/main.lua',
+}
 
-ui_page 'html/index.html'
-
-files {
-    'html/index.html',
-    'html/script.js',
-    'html/style.css'
+dependencies {
+    'ScaleformUI',
+    'ScaleformUI_Assets',
 }
 
 lua54 'yes'

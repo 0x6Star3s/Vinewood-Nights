@@ -15,6 +15,8 @@ client_scripts {
     '@PolyZone/client.lua',
     '@PolyZone/BoxZone.lua',
     '@PolyZone/ComboZone.lua',
+    '@ScaleformUI/ScaleformUI.lua',          -- menu w stylu GTA, to samo co w warsztacie
+    '@terrific-customs/client/dragcam.lua',  -- kamera orbitalna z warsztatu (LPM/scroll)
     'client/main.lua',
     'client/adminpanel.lua',
 }
@@ -31,6 +33,12 @@ files {
     'html/index.html',
     'html/style.css',
     'html/app.js',
+}
+
+dependencies {
+    'ScaleformUI',
+    'ScaleformUI_Assets',
+    'terrific-customs',
 }
 
 lua54 'yes'

@@ -76,19 +76,24 @@ QBCore.Functions.CreateCallback("qb-garage:server:GetGarageVehicles", function(s
     if not pData then cb(nil) return end
 
     if type == "public" then
+        local result
         if Config.SharedPublicGarages then
-            MySQL.query('SELECT * FROM player_vehicles WHERE citizenid = @citizenid AND state = @state',
-                {["@citizenid"] = pData.PlayerData.citizenid, ["@state"] = 1},
-                function(result)
-                    cb(result and result[1] and result or nil)
-                end)
+            result = MySQL.query.await('SELECT * FROM player_vehicles WHERE citizenid = ? AND state = ?',
+                {pData.PlayerData.citizenid, 1})
         else
-            MySQL.query('SELECT * FROM player_vehicles WHERE citizenid = @citizenid AND state = @state AND garage = @garage',
-                {["@citizenid"] = pData.PlayerData.citizenid, ["@garage"] = garage, ["@state"] = 1},
-                function(result)
-                    cb(result and result[1] and result or nil)
-                end)
+            result = MySQL.query.await('SELECT * FROM player_vehicles WHERE citizenid = ? AND state = ? AND garage = ?',
+                {pData.PlayerData.citizenid, 1, garage})
         end
+        result = result or {}
+        -- Odholowanych aut nie ma na liscie garazu - odbiera sie je u holownika,
+        -- wiec tylko przypominamy, ile ich tam czeka.
+        local towed = MySQL.scalar.await('SELECT COUNT(*) FROM player_vehicles WHERE citizenid = ? AND state = ?',
+            {pData.PlayerData.citizenid, 0}) or 0
+        if towed > 0 then
+            TriggerClientEvent('QBCore:Notify', src,
+                ('Auta u holownika: %d. Odbierzesz je na parkingu odzyskiwania.'):format(towed), 'primary', 7000)
+        end
+        cb(result[1] and result or nil)
     elseif type == "depot" then
         MySQL.query('SELECT * FROM player_vehicles WHERE citizenid = ? AND state = ?', {pData.PlayerData.citizenid, 0}, function(result)
             if result and result[1] then
@@ -256,25 +261,9 @@ RegisterNetEvent('qb-garage:server:updateVehicle', function(state, fuel, engine,
         end
     end
 
-    CheckOwnership(src, plate, type, garage, gang, function(owned)
-        if owned then
-            ContinueVehicleSave(true)
-            return
-        end
-
-        -- Fallback: if this player has exactly one vehicle outside, store that vehicle.
-        -- This avoids getting stuck when GTA/client plate formatting differs from the DB value.
-        MySQL.query('SELECT plate FROM player_vehicles WHERE citizenid = ? AND state = ? LIMIT 2', {
-            pData.PlayerData.citizenid, 0
-        }, function(outsideVehicles)
-            if outsideVehicles and #outsideVehicles == 1 then
-                plate = QBCore.Shared.Trim(outsideVehicles[1].plate)
-                ContinueVehicleSave(true)
-            else
-                ContinueVehicleSave(false)
-            end
-        end)
-    end)
+    -- Bez fallbacku "jedyne auto na zewnatrz": zapisywal cudze / NPC auto pod Twoja tablice
+    -- (z jego modami), a tablice i tak porownujemy przez TRIM po obu stronach.
+    CheckOwnership(src, plate, type, garage, gang, ContinueVehicleSave)
 end)
 
 RegisterNetEvent('qb-garage:server:updateVehicleState', function(state, plate, garage)
@@ -325,7 +314,8 @@ RegisterNetEvent('qb-garage:server:PayDepotPrice', function(data)
 
     MySQL.query('SELECT * FROM player_vehicles WHERE TRIM(plate) = ?', {QBCore.Shared.Trim(vehicle.plate)}, function(result)
         if result and result[1] then
-            local depotprice = result[1].depotprice
+            local depotprice = tonumber(result[1].depotprice) or 0
+            if depotprice <= 0 then depotprice = Config.Recover.fallbackPrice or 0 end
             if cashBalance >= depotprice then
                 Player.Functions.RemoveMoney("cash", depotprice, "paid-depot")
                 -- NAPRAWA: ujednolicono nazwę eventu (było "qb-garages" z "s")

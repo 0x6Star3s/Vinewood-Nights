@@ -555,6 +555,55 @@ local function SaveStashItems(stashId, items)
 	Stashes[stashId].isOpen = false
 end
 
+-- Materialy ze stasha zdejmowane po stronie serwera (mechanik). Otwarty stash = kopia w RAM,
+-- inaczej stan z bazy. Zapis bezposrednio do bazy, bez ruszania flagi isOpen.
+local function StashItemsFor(stashId)
+	if Stashes[stashId] and Stashes[stashId].isOpen and Stashes[stashId].items then
+		return Stashes[stashId].items
+	end
+	return GetStashItems(stashId)
+end
+
+local function CountInStash(items, itemName)
+	local total = 0
+	for _, item in pairs(items) do
+		if item.name == itemName then total = total + (tonumber(item.amount) or 0) end
+	end
+	return total
+end
+
+local function GetStashItemCount(stashId, itemName)
+	return CountInStash(StashItemsFor(stashId), itemName)
+end
+exports('GetStashItemCount', GetStashItemCount)
+
+local function RemoveStashItem(stashId, itemName, amount)
+	amount = tonumber(amount) or 0
+	if amount <= 0 then return false end
+	local items = StashItemsFor(stashId)
+	if CountInStash(items, itemName) < amount then return false end
+
+	local left = amount
+	for slot, item in pairs(items) do
+		if left > 0 and item.name == itemName then
+			local take = math.min(tonumber(item.amount) or 0, left)
+			item.amount = item.amount - take
+			left = left - take
+			if item.amount <= 0 then items[slot] = nil end
+		end
+	end
+
+	Stashes[stashId] = Stashes[stashId] or { label = stashId, isOpen = false }
+	Stashes[stashId].items = items
+	for _, item in pairs(items) do item.description = nil end
+	MySQL.insert('INSERT INTO stashitems (stash, items) VALUES (:stash, :items) ON DUPLICATE KEY UPDATE items = :items', {
+		['stash'] = stashId,
+		['items'] = json.encode(items)
+	})
+	return true
+end
+exports('RemoveStashItem', RemoveStashItem)
+
 local function AddToStash(stashId, slot, otherslot, itemName, amount, info, created)
 	amount = tonumber(amount) or 1
 	local ItemData = QBCore.Shared.Items[itemName]

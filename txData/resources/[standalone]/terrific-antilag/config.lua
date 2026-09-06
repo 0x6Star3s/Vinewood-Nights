@@ -1,8 +1,8 @@
 Config = {}
 
--- Auto strzela tylko z zamontowanym turbo (mod 18) - kupisz je w terrific-customs.
--- false = kazde auto, jak w wiekszosci darmowych skryptow.
-Config.RequireTurbo = false
+-- Auto strzela dopiero z kupionym antilagiem (zakladka "Komputer sterujacy"
+-- w terrific-customs, cena w Config.Prices.antilag). false = kazde auto.
+Config.RequireMod = true
 
 Config.Rpm           = 0.85  -- powyzej tylu obrotow puszczenie gazu daje strzal
 Config.MinSpeed      = 5.0   -- m/s, zeby nie strzelalo na postoju

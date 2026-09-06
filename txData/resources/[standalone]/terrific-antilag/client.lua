@@ -7,7 +7,7 @@
 --   * oryginal ufal netId od klienta (kazdy mogl podpalic cudze auto) - tutaj serwer
 --     sprawdza, czy nadawca faktycznie siedzi w tym pojezdzie
 --   * oryginal liczyl glosnosc jako vol/ratio, wiec z bliska szla w nieskonczonosc
---   * oryginal mial sztywna liste modeli aut, tutaj warunkiem jest turbo
+--   * oryginal mial sztywna liste modeli aut, tutaj warunkiem jest kupiony mod
 
 local enabled = true
 local nextPop = 0
@@ -28,9 +28,11 @@ local function canPop(ped, vehicle)
     if GetEntitySpeed(vehicle) < Config.MinSpeed then return false end
     if IsControlPressed(0, 72) then return false end -- hamulec
 
-    if Config.RequireTurbo then
-        SetVehicleModKit(vehicle, 0)
-        if not IsToggleModOn(vehicle, 18) then return false end
+    -- Antilag to platny mod z warsztatu, nie wyposazenie kazdego auta.
+    if Config.RequireMod then
+        if GetResourceState('terrific-customs') ~= 'started' then return false end
+        local ok, has = pcall(function() return exports['terrific-customs']:HasAntilag(vehicle) end)
+        if not ok or not has then return false end
     end
 
     return true
@@ -63,6 +65,10 @@ CreateThread(function()
             if now < burstUntil and now >= nextPop then
                 nextPop = now + Config.Cooldown
                 TriggerServerEvent('terrific-antilag:server:pop', VehToNet(vehicle))
+                -- kontrolka "AL" na desce rozdzielczej rysuje terrific-customs
+                if GetResourceState('terrific-customs') == 'started' then
+                    pcall(function() exports['terrific-customs']:FlashAntilag() end)
+                end
             end
         else
             onThrottle = false

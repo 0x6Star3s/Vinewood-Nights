@@ -1,43 +1,31 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
-RegisterNetEvent('tow:requestTow')
-AddEventHandler('tow:requestTow', function()
-    local player = PlayerPedId()
+-- Wezwanie lawety (np. z menu impoundu policji): serwer rozsyla do wszystkich z praca tow
+RegisterNetEvent('tow:requestTow', function()
     local vehicle = QBCore.Functions.GetClosestVehicle()
-    local coords = GetEntityCoords(player)
-    if vehicle ~= 0 then
-        QBCore.Functions.Notify('Requested Tow Worker', 'success')
-        TriggerServerEvent('tow:sendTowRequest', GetVehicleNumberPlateText(vehicle), coords)
-        exports['qb-phone']:PhoneNotification('Tow Request Outgoing', 'Please wait for a response', '#9f0e63', "NONE", 10000)
-    else
-        QBCore.Functions.Notify('No vehicle found', 'error')
+    if not vehicle or vehicle == 0 then
+        QBCore.Functions.Notify(Lang:t('error.no_vehicle_nearby'), 'error')
+        return
     end
+    TriggerServerEvent('tow:sendTowRequest', GetVehicleNumberPlateText(vehicle), GetEntityCoords(PlayerPedId()))
 end)
 
-RegisterNetEvent('tow:requestResponse')
-AddEventHandler('tow:requestResponse', function(towDriverName, accepted)
-    if accepted then
-        exports['qb-phone']:PhoneNotification('Tow request accepted by ' .. towDriverName, 'They will be there shortly!', '#9f0e63', "NONE", 10000)
-    else
-        exports['qb-phone']:PhoneNotification('Tow request declined.', 'Declined.', '#9f0e63', "NONE", 5000)
-    end
-end)
+-- qb-phone nie ma eksportu PhoneNotification (stary kod rzucal bledem) - powiadomienie
+-- QBCore + powiadomienie w telefonie + blip na 2 minuty
+RegisterNetEvent('tow:receiveTowRequest', function(plate, coords)
+    local text = Lang:t('info.tow_request_received', { plate = plate })
+    QBCore.Functions.Notify(text, 'primary', 8000)
+    TriggerEvent('qb-phone:client:CustomNotification', Lang:t('info.tow_request_title'), text, 'fas fa-truck-pickup', '#9f0e63', 10000)
 
-RegisterNetEvent('tow:receiveTowRequest')
-AddEventHandler('tow:receiveTowRequest', function(target, plate, coords)
-
-    local success = exports['qb-phone']:PhoneNotification('Tow Request: ', 'Vehicle Plate: ' .. plate, '#9f0e63', "NONE", 15000, 'fas fa-check-circle', 'fas fa-times-circle')
-    if success then
-        TriggerServerEvent('tow:sendTowResponse', target, true)
-        local blip = AddBlipForCoord(coords.x, coords.y, coords.z)
-        SetBlipAsShortRange(blip, false)
-        SetBlipSprite(blip, 68)
-        SetBlipColour(blip, 0)
-        SetBlipScale(blip, 0.6)
-        SetBlipDisplay(blip, 6)
-        Wait(130000)
-        RemoveBlip(blip)
-    else
-        TriggerServerEvent('tow:sendTowResponse', target, false)
-    end
+    local blip = AddBlipForCoord(coords.x, coords.y, coords.z)
+    SetBlipSprite(blip, 68)
+    SetBlipColour(blip, 5)
+    SetBlipScale(blip, 0.8)
+    SetBlipAsShortRange(blip, false)
+    BeginTextCommandSetBlipName('STRING')
+    AddTextComponentSubstringPlayerName(Lang:t('info.tow_request_title'))
+    EndTextCommandSetBlipName(blip)
+    SetTimeout(120000, function()
+        if DoesBlipExist(blip) then RemoveBlip(blip) end
+    end)
 end)

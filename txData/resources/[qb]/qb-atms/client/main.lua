@@ -130,7 +130,7 @@ RegisterNUICallback("loadBankingAccount", function(data)
                 status = "closeATM"
             })
         end
-    end, data.cid, data.cardnumber)
+    end, data.cid, data.cardnumber, data.pin)
 end)
 
 RegisterNUICallback("removeCard", function(data)

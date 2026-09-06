@@ -880,6 +880,17 @@ Config.VehicleDoors = {
     shouldClose = true
 }
 
+-- Przycisk "TC OFF" w aucie. Obsluguje terrific-customs, dziala tylko gdy auto
+-- ma kupiona kontrole trakcji w warsztacie.
+Config.TractionControl = {
+    id = 'tractioncontrol',
+    title = 'Kontrola trakcji',
+    icon = 'car-side',
+    type = 'client',
+    event = 'terrific-customs:client:toggleTraction',
+    shouldClose = true
+}
+
 Config.VehicleExtras = {
     id = 'vehicleextras',
     title = 'Vehicle Extras',

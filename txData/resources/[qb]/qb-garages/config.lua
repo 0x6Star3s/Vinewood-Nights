@@ -8,28 +8,32 @@ Config.AdminPanel = {
     permission = "admin",        -- uprawnienie QBCore wymagane do otwarcia panelu
 }
 
--- 3D podgląd samochodu w menu garażu (obrotnica). Zanim wyciągniesz auto,
--- widać jego model + Twoje modyfikacje (kolor, felgi itd.) na obracającej się
--- obrotnicy. Strzałki w lewo/prawo przełączają podglądany pojazd na liście.
+-- 3D podgląd auta w menu garażu: to samo menu (ScaleformUI) i ta sama kamera
+-- (DragCam z terrific-customs) co w warsztacie. LPM = obrót, scroll = zoom,
+-- spacja = drzwi, V = widok z kabiny. Góra/dół na liście przełącza auto.
 Config.VehiclePreview = {
-    enabled = true,        -- czy włączyć podgląd 3D podczas przeglądania listy pojazdów
-    spinSpeed = 10.0,      -- prędkość obrotu auta na obrotnicy (stopni/sekundę)
-    camDistance = 7.0,     -- odległość kamery od auta
-    camHeight = 1.7,       -- wysokość kamery nad autem (razem z camFocal daje kąt)
-    camFocal = 0.9,        -- punkt na który patrzy kamera (wysokość nad autem)
-    camSideOffset = 7.0,   -- legacy fallback
-    camFov = 45.0,
-    camAngleOffsets = { 135.0, -135.0, 90.0, -90.0, 45.0, -45.0, 180.0, 0.0 },
-    cycleLeftRight = true, -- strzałka lewo/prawo (174/175) zmienia podglądany pojazd
-
-    -- Ustawianie kąta kamery przez admina (orbita myszką wokół auta, patrz client/main.lua)
-    orbitSensitivity = 0.35,  -- czułość obrotu myszką (mniej = wolniej/spokojniej, 1.0 = bardzo szybko)
-    orbitZoomStep = 0.6,      -- o ile zmienia się dystans przy jednym "kliknięciu" scrolla
-    orbitMinDistance = 1.2,
-    orbitMaxDistance = 25.0,
+    enabled = true,
+    camera = { initial = 5.0, min = 2.5, max = 10.0, scrollIncrements = 0.5, angle = 22.0 },
 }
 
-Config.AutoRespawn = false --True == auto respawn cars that are outside into your garage on script restart, false == does not put them into your garage and players have to go to the impound
+-- Wyglad menu garazu (ScaleformUI). subtitle to numer z HudColours,
+-- 21 = PURPLE, 9 = BLUE (domyslny GTA), 6 = RED, 18 = GREEN, 24 = PINK.
+Config.MenuStyle = {
+    banner   = { r = 150, g = 40, b = 200 },
+    subtitle = 21,
+    -- Grafika na banerze. Puste = zwykly kolorowy pasek z nazwa garazu (bez logo warsztatu).
+    -- Przyklady logo: "shopui_title_carmod", "shopui_title_conveniencestore".
+    bannerDict    = "",
+    bannerTexture = "",
+}
+
+-- Odholowane auta odbiera sie u holownika (garaz typu "depot"). Cena to mandat z bazy
+-- (policja), a gdy jest zerowa - fallbackPrice.
+Config.Recover = {
+    fallbackPrice = 500,
+}
+
+Config.AutoRespawn = true -- po restarcie auta zostawione na zewnatrz wracaja do garazu (false = laduja na parkingu odzyskiwania)
 Config.SharedGarages = false   --True == Gang and job garages are shared, false == Gang and Job garages are personal
 Config.VisuallyDamageCars = true --True == Visually damage cars that go out of the garage depending of body damage, false == Do not visually damage cars (damage is still applied to car values)
 Config.SharedPublicGarages = true -- True = public garages can access all player vehicles parked in public garages
@@ -45,9 +49,9 @@ Config.GarageMarkers = {
 }
 
 -- Każdy garaż może mieć opcjonalnie "previewPoint" (vector4) - osobne miejsce
--- na 3D podgląd auta (obrotnica), niezależne od spawnPoint. Jeśli brak,
--- podgląd używa spawnPoint. Wszystko to można ustawić w grze przez panel
--- administracyjny (/garageadmin) zamiast edytować ten plik ręcznie.
+-- na 3D podgląd auta, niezależne od spawnPoint. Jeśli brak, podgląd używa
+-- spawnPoint. Ustawiasz to w grze przez panel administracyjny (/garageadmin).
+-- Pole "previewCamPoint" w panelu jest już nieużywane - kamerę obraca gracz.
 Config.Garages = {
     ["motelgarage"] = {
         ["label"] = "Motel Parking",

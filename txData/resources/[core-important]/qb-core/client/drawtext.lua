@@ -1,38 +1,30 @@
+-- Jedna podpowiedz "[E] ..." na calym serwerze: qb-core przekierowuje swoj DrawText
+-- na lib.showTextUI z ox_lib - to samo, czego uzywa warsztat. NUI qb-core (html/)
+-- zostaje na dysku, ale nic juz do niego nie pisze.
+local POSITIONS = { left = 'left-center', right = 'right-center', top = 'top-center' }
+
+-- Zasoby przysylaja HTML (<br>, <span>) - ox_lib pokazuje zwykly tekst
+local function clean(text)
+    text = tostring(text or '')
+    text = text:gsub('<br%s*/?>', '\n'):gsub('<[^>]->', '')
+    return text
+end
+
 local function hideText()
-    SendNUIMessage({
-        action = 'HIDE_TEXT',
-    })
+    lib.hideTextUI()
 end
 
 local function drawText(text, position)
-    if type(position) ~= "string" then position = "left" end
-
-    SendNUIMessage({
-        action = 'DRAW_TEXT',
-        data = {
-            text = text,
-            position = position
-        }
-    })
+    if type(position) ~= 'string' then position = 'left' end
+    lib.showTextUI(clean(text), { position = POSITIONS[position] or 'left-center' })
 end
 
 local function changeText(text, position)
-    if type(position) ~= "string" then position = "left" end
-
-    SendNUIMessage({
-        action = 'CHANGE_TEXT',
-        data = {
-            text = text,
-            position = position
-        }
-    })
+    drawText(text, position)
 end
 
 local function keyPressed()
-    CreateThread(function() -- Not sure if a thread is needed but why not eh?
-        SendNUIMessage({
-            action = 'KEY_PRESSED',
-        })
+    CreateThread(function()
         Wait(500)
         hideText()
     end)

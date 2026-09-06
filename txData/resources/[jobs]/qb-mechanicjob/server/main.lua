@@ -23,6 +23,13 @@ function GetVehicleStatus(plate)
     return retval
 end
 
+-- Zapis zuzycia czesci do player_vehicles.status (dotad nikt nie wolal saveStatus, wiec
+-- kazdy restart zerowal naprawy). UPDATE po tablicy: auto spoza bazy = 0 wierszy, bez szkody.
+local function PersistStatus(plate)
+    if not VehicleStatus[plate] then return end
+    MySQL.update('UPDATE player_vehicles SET status = ? WHERE plate = ?', { json.encode(VehicleStatus[plate]), plate })
+end
+
 function IsAuthorized(CitizenId)
     local retval = false
     for _, cid in pairs(Config.AuthorizedIds) do
@@ -153,6 +160,7 @@ RegisterNetEvent('vehiclemod:server:updatePart', function(plate, part, level)
             elseif VehicleStatus[plate][part] > 100 then
                 VehicleStatus[plate][part] = 100
             end
+            PersistStatus(plate) -- silnik/karoseria leca co sekunde, reszta rzadko - te zapisujemy od razu
         end
         TriggerClientEvent("vehiclemod:client:setVehicleStatus", -1, plate, VehicleStatus[plate])
     end
@@ -161,6 +169,7 @@ end)
 RegisterNetEvent('qb-vehicletuning:server:SetPartLevel', function(plate, part, level)
     if VehicleStatus[plate] ~= nil then
         VehicleStatus[plate][part] = level
+        PersistStatus(plate)
         TriggerClientEvent("vehiclemod:client:setVehicleStatus", -1, plate, VehicleStatus[plate])
     end
 end)
@@ -170,6 +179,7 @@ RegisterNetEvent('vehiclemod:server:fixEverything', function(plate)
         for k, v in pairs(Config.MaxStatusValues) do
             VehicleStatus[plate][k] = v
         end
+        PersistStatus(plate)
         TriggerClientEvent("vehiclemod:client:setVehicleStatus", -1, plate, VehicleStatus[plate])
     end
 end)
@@ -291,4 +301,30 @@ QBCore.Commands.Add("firemechanic", "Fire A Mechanic", {{
     else
         TriggerClientEvent('QBCore:Notify', source, "You Cannot Do This!", "error")
     end
+end)
+
+-- Naprawa czesci na podnosniku: serwer sprawdza i zdejmuje materialy z magazynu
+-- (dotad klient przysylal cala zawartosc stasha, wiec mogl ja sobie dopisac)
+local function CanRepair(Player, part)
+    return Player ~= nil and Player.PlayerData.job.type == 'mechanic' and Player.PlayerData.job.onduty
+        and Config.RepairCostAmount[part] ~= nil
+end
+
+QBCore.Functions.CreateCallback('qb-mechanicjob:server:hasMaterials', function(source, cb, part)
+    local Player = QBCore.Functions.GetPlayer(source)
+    if not CanRepair(Player, part) then return cb(false) end
+    local cost = Config.RepairCostAmount[part]
+    cb(exports['qb-inventory']:GetStashItemCount('mechanicstash', cost.item) >= cost.costs)
+end)
+
+RegisterNetEvent('qb-mechanicjob:server:repairPart', function(part)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not CanRepair(Player, part) then return end
+    local cost = Config.RepairCostAmount[part]
+    if not exports['qb-inventory']:RemoveStashItem('mechanicstash', cost.item, cost.costs) then
+        TriggerClientEvent('QBCore:Notify', src, Lang:t('notifications.not_materials'), 'error')
+        return
+    end
+    TriggerClientEvent('qb-mechanicjob:client:repairPartDone', src, part)
 end)

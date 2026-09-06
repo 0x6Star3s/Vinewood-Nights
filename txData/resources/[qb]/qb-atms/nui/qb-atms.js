@@ -141,7 +141,8 @@ $( function() {
                     $('#pinCode').val('');
                     $.post("https://qb-atms/loadBankingAccount", JSON.stringify({
                         cid: clientCid,
-                        cardnumber: cardNumb
+                        cardnumber: cardNumb,
+                        pin: clientPin
                     }));
                 } else {
                     $('#pinCode').val('');
@@ -197,7 +198,8 @@ $( function() {
             $.post("https://qb-atms/doATMWithdraw", JSON.stringify({
                 amount: parseInt(amount),
                 cid: clientCid,
-                cardnumber: cardNumb
+                cardnumber: cardNumb,
+                        pin: clientPin
             }));
         });
     });
@@ -212,7 +214,8 @@ $( function() {
                     $('#pinCode').val('');
                     $.post("https://qb-atms/loadBankingAccount", JSON.stringify({
                         cid: clientCid,
-                        cardnumber: cardNumb
+                        cardnumber: cardNumb,
+                        pin: clientPin
                     }));
                 } else {
                     $('#pinCode').val('');

@@ -467,15 +467,6 @@ local function OpenMenu()
                 event = "qb-mechanicjob:client:UnattachVehicle",
             }
         }, {
-            header = Lang:t('lift_menu.header_stats'),
-            txt = Lang:t('lift_menu.desc_stats'),
-            params = {
-                event = "qb-mechanicjob:client:CheckStatus",
-                args = {
-                    number = 1,
-                }
-            }
-        }, {
             header = Lang:t('lift_menu.header_parts'),
             txt = Lang:t('lift_menu.desc_parts'),
             params = {
@@ -682,47 +673,35 @@ end
 
 local function RepairPart(part)
     local PartData = Config.RepairCostAmount[part]
-    local hasitem = false
-    local indx = 0
-    local countitem = 0
-    QBCore.Functions.TriggerCallback('qb-inventory:server:GetStashItems', function(StashItems)
-        for k,v in pairs(StashItems) do
-            if v.name == PartData.item then
-                hasitem = true
-                if v.amount >= PartData.costs then
-                    countitem = v.amount
-                    indx = k
-                end
-            end
-        end
-        if hasitem and countitem >= PartData.costs then
-            TriggerEvent('animations:client:EmoteCommandStart', {"mechanic"})
-            QBCore.Functions.Progressbar("repair_part", Lang:t('labels.progress_bar') ..Config.ValuesLabels[part], math.random(5000, 10000), false, true, {
-                disableMovement = true,
-                disableCarMovement = true,
-                disableMouse = false,
-                disableCombat = true,
-            }, {}, {}, {}, function() -- Done
-                TriggerEvent('animations:client:EmoteCommandStart', {"c"})
-                if (countitem - PartData.costs) <= 0 then
-                    StashItems[indx] = nil
-                else
-                    countitem = (countitem - PartData.costs)
-                    StashItems[indx].amount = countitem
-                end
-                TriggerEvent('qb-vehicletuning:client:RepaireeePart', part)
-                TriggerServerEvent('qb-inventory:server:SaveStashItems', "mechanicstash", StashItems)
-                SetTimeout(250, function()
-                    PartsMenu()
-                end)
-            end, function()
-                QBCore.Functions.Notify(Lang:t('notifications.rep_canceled'), "error")
-            end)
-        else
+    if not PartData then return end
+    QBCore.Functions.TriggerCallback('qb-mechanicjob:server:hasMaterials', function(hasMaterials)
+        if not hasMaterials then
             QBCore.Functions.Notify(Lang:t('notifications.not_materials'), 'error')
+            return
         end
-    end, "mechanicstash")
+        TriggerEvent('animations:client:EmoteCommandStart', {"mechanic"})
+        QBCore.Functions.Progressbar("repair_part", Lang:t('labels.progress_bar') ..Config.ValuesLabels[part], math.random(5000, 10000), false, true, {
+            disableMovement = true,
+            disableCarMovement = true,
+            disableMouse = false,
+            disableCombat = true,
+        }, {}, {}, {}, function() -- Done
+            TriggerEvent('animations:client:EmoteCommandStart', {"c"})
+            -- serwer zdejmuje materialy z magazynu i odsyla repairPartDone
+            TriggerServerEvent('qb-mechanicjob:server:repairPart', part)
+        end, function()
+            TriggerEvent('animations:client:EmoteCommandStart', {"c"})
+            QBCore.Functions.Notify(Lang:t('notifications.rep_canceled'), "error")
+        end)
+    end, part)
 end
+
+RegisterNetEvent('qb-mechanicjob:client:repairPartDone', function(part)
+    TriggerEvent('qb-vehicletuning:client:RepaireeePart', part)
+    SetTimeout(250, function()
+        PartsMenu()
+    end)
+end)
 
 
 -- Events
