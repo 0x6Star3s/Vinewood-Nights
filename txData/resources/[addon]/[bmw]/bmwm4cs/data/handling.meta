@@ -92,9 +92,9 @@
       <fTractionLossMult value="1.000000" />
 
       <!-- Zawieszenie: zachowane z oryginału — proporcje są już dobre (comp/rebound) -->
-      <fSuspensionForce value="2.400000" />
-      <fSuspensionCompDamp value="1.400000" />
-      <fSuspensionReboundDamp value="2.000000" />
+      <fSuspensionForce value="2.900000" />
+      <fSuspensionCompDamp value="1.450000" />
+      <fSuspensionReboundDamp value="2.050000" />
 
       <fSuspensionUpperLimit value="0.060000" />
       <fSuspensionLowerLimit value="-0.110000" />

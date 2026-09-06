@@ -89,16 +89,16 @@
       <fTractionLossMult value="0.900000" />
 
       <!-- Pneumatyczne zawieszenie Bentleya — miększe niż sportowe, bez zmian -->
-      <fSuspensionForce value="1.500000" />
+      <fSuspensionForce value="1.620000" />
 
       <!-- [POPRAWKA KRYTYCZNA] Reguła: fSuspensionCompDamp = fSuspensionForce / 2
            1.620 / 2 = 0.810
            Stara wartość 0.620 = tylko 38% siły → auto "skakało" na nierównościach
            i nie wracało do pozycji neutralnej prawidłowo. -->
-      <fSuspensionCompDamp value="0.950000" />
+      <fSuspensionCompDamp value="0.810000" />
 
       <!-- fSuspensionReboundDamp = fSuspensionForce × 0.55 = 1.620 × 0.55 = 0.891 -->
-      <fSuspensionReboundDamp value="1.500000" />
+      <fSuspensionReboundDamp value="0.891000" />
 
       <!-- Skok zawieszenia pneumatycznego, bez zmian -->
       <fSuspensionUpperLimit value="0.120000" />

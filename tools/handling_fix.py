@@ -12,7 +12,7 @@ Modes:
            Fixes the extremes (400 flatVel, brake 19, inverted traction, COM 9 m under the car) and keeps character.
   template reset the "feel" parameters (traction, brakes, drag, anti-roll, roll centre, damping, steering,
            inertia) to a vanilla-like template of the class; keep car-specific ones (mass, gears, drive bias,
-           top speed and drive force - clamped; suspension limits, COM x/y, flags, seats). All cars of a class
+           top speed and drive force - clamped; springs and damping, suspension limits, COM x/y, flags, seats). All cars of a class
            then drive consistently; tune single cars by hand afterwards.
 
 Anchors (Rockstar values): ADDER, ZENTORNO (super); MASSACRO (sports); SCHAFTER3, COG55 (sedan); BALLER3, HUNTLEY (SUV);
@@ -57,7 +57,9 @@ CR = {"SUPER": ((150, 175), (0.28, 0.42), (1300, 2000), (2.4, 2.75)),
       "COMPACT": ((110, 145), (0.18, 0.30), (900, 1600), (1.9, 2.4))}
 # generic clamp ranges (vanilla min..max over passenger cars) used in both modes
 G = {"fTractionCurveLateral": (18, 26), "fBrakeForce": (0.5, 1.3), "fBrakeBiasFront": (0.42, 0.66), "fSteeringLock": (34, 43),
-     "fSuspensionForce": (1.3, 3.2), "fSuspensionCompDamp": (0.8, 2.0), "fSuspensionReboundDamp": (1.2, 3.2),
+     # sprezyna jest sprzezona z limitami z tego samego pliku: kolo spoczywa w lower + 1/(4*fSuspensionForce)
+     # (wiki handling.meta). Przyciecie 5.0 -> 3.2 obniza auto o 3 cm, wiec tniemy tylko absurdy.
+     "fSuspensionForce": (1.0, 6.0), "fSuspensionCompDamp": (0.5, 5.0), "fSuspensionReboundDamp": (0.8, 6.0),
      "fSuspensionUpperLimit": (0.03, 0.35), "fSuspensionLowerLimit": (-0.35, -0.03), "fAntiRollBarForce": (0.3, 1.2),
      "fAntiRollBarBiasFront": (0.45, 0.7), "fRollCentreHeightFront": (0.05, 0.7), "fRollCentreHeightRear": (0.05, 0.7),
      "fLowSpeedTractionLossMult": (0.95, 1.6), "fTractionLossMult": (0.9, 1.1), "fTractionBiasFront": (0.46, 0.52), "fDriveInertia": (0.3, 1.1),
@@ -138,7 +140,9 @@ def fix_item(b, cls, mode, log):
         clamp(k, lo, hi)
     if mode == "template":
         for k, tv in zip(KEYS, tpl):
-            if k in ("fInitialDriveMaxFlatVel", "fInitialDriveForce"):
+            # sprezyna/tlumienie zostaja z pliku autora: modeler ustawil je pod swoje limity i wysokosc
+            # zawieszenia. Szablonowe 2.45 zamiast 5.0 = auto 5 cm nizej, mniej skoku, podskakuje na krawezniku.
+            if k in ("fInitialDriveMaxFlatVel", "fInitialDriveForce", "fSuspensionForce", "fSuspensionCompDamp", "fSuspensionReboundDamp"):
                 continue
             if k == "inertiaZ":
                 m = re.search(r'(<vecInertiaMultiplier x="[^"]+" y="[^"]+" z=")([^"]+)(")', b)
