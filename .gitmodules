@@ -1,9 +1,0 @@
-[submodule "txData/resources/[local]/jg-vehicleindicators"]
-	path = txData/resources/[local]/jg-vehicleindicators
-	url = https://github.com/jgscripts/jg-vehicleindicators
-[submodule "txData/resources/[local]/lachee-garage"]
-	path = txData/resources/[local]/lachee-garage
-	url = https://github.com/Lachee/fivem-garage.git
-[submodule "txData/resources/[local]/ts_esx-CarKeys"]
-	path = txData/resources/[local]/ts_esx-CarKeys
-	url = https://github.com/Trusted-Studios/ts_esx-CarKeys
